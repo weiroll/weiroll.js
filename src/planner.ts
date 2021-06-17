@@ -103,7 +103,9 @@ class BaseContract {
     defineReadOnly(this, 'functions', {});
 
     const uniqueNames: { [name: string]: Array<string> } = {};
+
     const uniqueSignatures: { [signature: string]: boolean } = {};
+
     Object.keys(this.interface.functions).forEach(signature => {
       const fragment = this.interface.functions[signature];
 
@@ -112,17 +114,18 @@ class BaseContract {
       if (uniqueSignatures[signature]) {
         throw new Error(`Duplicate ABI entry for ${JSON.stringify(signature)}`);
       }
+
       uniqueSignatures[signature] = true;
 
       // Track unique names; we only expose bare named functions if they
       // are ambiguous
-      {
-        const name = fragment.name;
-        if (!uniqueNames[name]) {
-          uniqueNames[name] = [];
-        }
-        uniqueNames[name].push(signature);
+      const name = fragment.name;
+
+      if (!uniqueNames[name]) {
+        uniqueNames[name] = [];
       }
+
+      uniqueNames[name].push(signature);
 
       if ((<Contract>this)[signature] == null) {
         defineReadOnly<any, any>(this, signature, buildCall(this, fragment));
