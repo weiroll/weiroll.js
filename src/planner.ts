@@ -12,21 +12,26 @@ export interface Value {
     readonly param: ParamType;
 }
 
-export interface LiteralValue extends Value {
+export class LiteralValue implements Value {
+    readonly param: ParamType;
     readonly value: string;
+
+    constructor(param: ParamType, value: string) {
+        defineReadOnly(this, "param", param);
+        defineReadOnly(this, "value", value);
+    }
 }
 
-export function isLiteralValue(value: any): value is LiteralValue {
-    return (value as LiteralValue).value !== undefined;
-}
-
-export interface ReturnValue extends Value {
+export class ReturnValue implements Value {
+    readonly param: ParamType;
     readonly planner: Planner;
     readonly commandIndex: number; // Index of the command in the array of planned commands
-}
 
-export function isReturnValue(value: any): value is ReturnValue {
-    return (value as ReturnValue).commandIndex !== undefined;
+    constructor(param: ParamType, planner: Planner, commandIndex: number) {
+        defineReadOnly(this, "param", param);
+        defineReadOnly(this, "planner", planner);
+        defineReadOnly(this, "commandIndex", commandIndex);
+    }
 }
 
 export interface FunctionCall {
@@ -48,7 +53,7 @@ function abiEncodeSingle(param: ParamType, value: any): LiteralValue {
     if(isDynamicType(param)) {
         return {param: param, value: hexDataSlice(defaultAbiCoder.encode([param], [value]), 32)};
     }
-    return {param: param, value: defaultAbiCoder.encode([param], [value])};
+    return new LiteralValue(param, defaultAbiCoder.encode([param], [value]));
 }
 
 function buildCall(contract: Contract, fragment: FunctionFragment): ContractFunction {
@@ -58,7 +63,7 @@ function buildCall(contract: Contract, fragment: FunctionFragment): ContractFunc
         }
         const encodedArgs = args.map((arg, idx) => {
             const param = fragment.inputs[idx];
-            if(isReturnValue(arg)) {
+            if(arg instanceof ReturnValue) {
                 if(arg.param.type != param.type) {
                     // Todo: type casting rules
                     throw new Error(`Cannot pass value of type ${arg.param.type} to input of type ${param.type}`);
@@ -161,7 +166,7 @@ export class Planner {
 
     addCommand(call: FunctionCall): ReturnValue | null {
         for(let arg of call.args) {
-            if(isReturnValue(arg)) {
+            if(arg instanceof ReturnValue) {
                 if(arg.planner != this) {
                     throw new Error("Cannot reuse return values across planners");
                 }
@@ -187,9 +192,9 @@ export class Planner {
         for(let i = 0; i < this.calls.length; i++) {
             const call = this.calls[i];
             for(let arg of call.args) {
-                if(isReturnValue(arg)) {
+                if(arg instanceof ReturnValue) {
                     commandVisibility[arg.commandIndex] = i;
-                } else if(isLiteralValue(arg)) {
+                } else if(arg instanceof LiteralValue) {
                     literalVisibility.set(arg.value, i);
                 } else {
                     throw new Error("Unknown function argument type");
@@ -225,9 +230,9 @@ export class Planner {
             const args = new Uint8Array(7).fill(0xff);
             call.args.forEach((arg, j) => {
                 let slot;
-                if(isReturnValue(arg)) {
+                if(arg instanceof ReturnValue) {
                     slot = returnSlotMap[arg.commandIndex];
-                } else if(isLiteralValue(arg)) {
+                } else if(arg instanceof LiteralValue) {
                     slot = literalSlotMap.get(arg.value);
                 } else {
                     throw new Error("Unknown function argument type");
