@@ -86,16 +86,16 @@ class BaseContract {
   readonly functions: { [name: string]: ContractFunction };
 
   constructor(address: string, contractInterface: ContractInterface) {
-    defineReadOnly(
-      this,
-      'interface',
-      getStatic<(contractInterface: ContractInterface) => Interface>(
-        new.target,
-        'getInterface'
-      )(contractInterface)
-    );
-    defineReadOnly(this, 'address', address);
-    defineReadOnly(this, 'functions', {});
+    this.interface = getStatic<
+      (contractInterface: ContractInterface) => Interface
+    >(
+      new.target,
+      'getInterface'
+    )(contractInterface);
+
+    this.address = address;
+
+    this.functions = {};
 
     const uniqueNames: { [name: string]: Array<string> } = {};
 
