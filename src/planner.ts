@@ -14,8 +14,6 @@ import {
 import { defineReadOnly, getStatic } from '@ethersproject/properties';
 import { Heap } from 'heap-js';
 
-const maxInputs = 7;
-
 export interface Value {
   readonly param: ParamType;
 }
@@ -44,9 +42,6 @@ export interface FunctionCall {
 }
 
 export type ContractFunction = (...args: Array<any>) => FunctionCall;
-
-const paramTypeBytes = new RegExp(/^bytes([0-9]*)$/);
-const paramTypeNumber = new RegExp(/^(u?int)([0-9]*)$/);
 
 export function isDynamicType(param: ParamType): boolean {
   return ['string', 'bytes', 'array', 'tuple'].includes(param.baseType);
