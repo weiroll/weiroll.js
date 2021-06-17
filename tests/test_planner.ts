@@ -152,5 +152,20 @@ describe('Planner', () => {
     it('requires argument counts to match the function definition', () => {
         const planner = new Planner();
         expect(() => planner.addCommand(Math.add(1))).to.throw();
-    })
+    });
+
+    it('plans a call to a function that takes the current state', () => {
+        const TestContract = Contract.fromEthersContract(new ethers.Contract(SAMPLE_ADDRESS, [
+            "function useState(bytes[] state)"
+        ]));
+
+        const planner = new Planner();
+        planner.addCommand(TestContract.useState(planner.state));
+        const {commands, state} = planner.plan();
+        
+        expect(commands.length).to.equal(1);
+        expect(commands[0]).to.equal("0x08f389c8feffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee");
+
+        expect(state.length).to.equal(0);
+    });
 });

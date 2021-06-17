@@ -12,6 +12,10 @@ export interface Value {
     readonly param: ParamType;
 }
 
+function isValue(arg:any): arg is Value {
+    return (arg as Value).param !== undefined;
+}
+
 export class LiteralValue implements Value {
     readonly param: ParamType;
     readonly value: string;
@@ -34,6 +38,14 @@ export class ReturnValue implements Value {
     }
 }
 
+export class StateValue implements Value {
+    readonly param: ParamType;
+
+    constructor() {
+        defineReadOnly(this, "param", ParamType.from('bytes[]'));
+    }
+}
+
 export interface FunctionCall {
     readonly contract: Contract;
     readonly fragment: FunctionFragment;
@@ -51,7 +63,7 @@ export function isDynamicType(param: ParamType): boolean {
 
 function abiEncodeSingle(param: ParamType, value: any): LiteralValue {
     if(isDynamicType(param)) {
-        return {param: param, value: hexDataSlice(defaultAbiCoder.encode([param], [value]), 32)};
+        return new LiteralValue(param, hexDataSlice(defaultAbiCoder.encode([param], [value]), 32));
     }
     return new LiteralValue(param, defaultAbiCoder.encode([param], [value]));
 }
@@ -63,7 +75,7 @@ function buildCall(contract: Contract, fragment: FunctionFragment): ContractFunc
         }
         const encodedArgs = args.map((arg, idx) => {
             const param = fragment.inputs[idx];
-            if(arg instanceof ReturnValue) {
+            if(isValue(arg)) {
                 if(arg.param.type != param.type) {
                     // Todo: type casting rules
                     throw new Error(`Cannot pass value of type ${arg.param.type} to input of type ${param.type}`);
@@ -158,9 +170,11 @@ export class Contract extends BaseContract {
 }
 
 export class Planner {
+    readonly state: StateValue;
     calls: FunctionCall[];
 
     constructor() {
+        defineReadOnly(this, "state", new StateValue());
         this.calls = [];
     }
 
@@ -179,7 +193,7 @@ export class Planner {
         if(call.fragment.outputs.length != 1) {
             return null;
         }
-        return {planner: this, commandIndex, param: call.fragment.outputs[0]};
+        return new ReturnValue(call.fragment.outputs[0], this, commandIndex);
     }
 
     plan(): {commands: string[], state: string[]} {
@@ -196,8 +210,8 @@ export class Planner {
                     commandVisibility[arg.commandIndex] = i;
                 } else if(arg instanceof LiteralValue) {
                     literalVisibility.set(arg.value, i);
-                } else {
-                    throw new Error("Unknown function argument type");
+                } else if(!(arg instanceof StateValue)) {
+                    throw new Error(`Unknown function argument type '${typeof arg}'`);
                 }
             }
         }
@@ -234,8 +248,10 @@ export class Planner {
                     slot = returnSlotMap[arg.commandIndex];
                 } else if(arg instanceof LiteralValue) {
                     slot = literalSlotMap.get(arg.value);
+                } else if(arg instanceof StateValue) {
+                    slot = 0xfe;
                 } else {
-                    throw new Error("Unknown function argument type");
+                    throw new Error(`Unknown function argument type '${typeof arg}'`);
                 }
                 if(isDynamicType(arg.param)) {
                     slot |= 0x80;
