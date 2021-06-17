@@ -171,14 +171,14 @@ export class Contract extends BaseContract {
 
 export class Planner {
     readonly state: StateValue;
-    calls: FunctionCall[];
+    calls: {call: FunctionCall, replacesState: boolean}[];
 
     constructor() {
         defineReadOnly(this, "state", new StateValue());
         this.calls = [];
     }
 
-    addCommand(call: FunctionCall): ReturnValue | null {
+    add(call: FunctionCall): ReturnValue | null {
         for(let arg of call.args) {
             if(arg instanceof ReturnValue) {
                 if(arg.planner != this) {
@@ -188,12 +188,28 @@ export class Planner {
         }
 
         const commandIndex = this.calls.length;
-        this.calls.push(call);
+        this.calls.push({call, replacesState: false});
         
         if(call.fragment.outputs.length != 1) {
             return null;
         }
         return new ReturnValue(call.fragment.outputs[0], this, commandIndex);
+    }
+
+    replaceState(call: FunctionCall) {
+        for(let arg of call.args) {
+            if(arg instanceof ReturnValue) {
+                if(arg.planner != this) {
+                    throw new Error("Cannot reuse return values across planners");
+                }
+            }
+        }
+
+        if(call.fragment.outputs.length != 1 || call.fragment.outputs[0].type != 'bytes[]') {
+            throw new Error("Function replacing state must return a bytes[]");
+        }
+
+        this.calls.push({call, replacesState: true});
     }
 
     plan(): {commands: string[], state: string[]} {
@@ -204,7 +220,7 @@ export class Planner {
 
         // Build visibility maps
         for(let i = 0; i < this.calls.length; i++) {
-            const call = this.calls[i];
+            const {call} = this.calls[i];
             for(let arg of call.args) {
                 if(arg instanceof ReturnValue) {
                     commandVisibility[arg.commandIndex] = i;
@@ -238,7 +254,7 @@ export class Planner {
 
         // Build commands, and add state entries as needed
         for(let i = 0; i < this.calls.length; i++) {
-            const call = this.calls[i];
+            const {call, replacesState} = this.calls[i];
 
             // Build a list of argument value indexes
             const args = new Uint8Array(7).fill(0xff);
@@ -261,7 +277,9 @@ export class Planner {
 
             // Figure out where to put the return value
             let ret = 0xff;
-            if(commandVisibility[i] != -1) {
+            if(replacesState) {
+                ret = 0xfe;
+            } else if(commandVisibility[i] != -1) {
                 ret = state.length;
 
                 // Is there a spare state slot?
