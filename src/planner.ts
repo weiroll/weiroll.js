@@ -280,9 +280,15 @@ export class Planner {
                 }
                 ret = state.length;
 
+                const topNode = nextDeadSlot.peek();
+
                 // Is there a spare state slot?
-                if(nextDeadSlot.peek().dies <= i) {
-                    ret = nextDeadSlot.pop().slot;
+                if(typeof topNode !== "undefined" && topNode.dies <= i) {
+                    const extractedTopNode = nextDeadSlot.pop();
+
+                    if (extractedTopNode) {
+                        ret = extractedTopNode?.slot;
+                    }
                 }
 
                 // Store the slot mapping
