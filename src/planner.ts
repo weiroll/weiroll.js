@@ -19,8 +19,8 @@ export class LiteralValue implements Value {
     readonly value: string;
 
     constructor(param: ParamType, value: string) {
-        defineReadOnly(this, "param", param);
-        defineReadOnly(this, "value", value);
+        this.param = param;
+        this.value = value;
     }
 }
 
@@ -30,9 +30,9 @@ export class ReturnValue implements Value {
     readonly commandIndex: number; // Index of the command in the array of planned commands
 
     constructor(param: ParamType, planner: Planner, commandIndex: number) {
-        defineReadOnly(this, "param", param);
-        defineReadOnly(this, "planner", planner);
-        defineReadOnly(this, "commandIndex", commandIndex);
+        this.param =  param;
+        this.planner =  planner;
+        this.commandIndex =  commandIndex;
     }
 }
 
@@ -40,7 +40,7 @@ export class StateValue implements Value {
     readonly param: ParamType;
 
     constructor() {
-        defineReadOnly(this, "param", ParamType.from('bytes[]'));
+        this.param = ParamType.from('bytes[]');
     }
 }
 
@@ -90,9 +90,9 @@ class BaseContract {
     readonly functions: { [ name: string ]: ContractFunction };
 
     constructor(address: string, contractInterface: ContractInterface) {
-        defineReadOnly(this, "interface", getStatic<(contractInterface: ContractInterface) => Interface>(new.target, "getInterface")(contractInterface));
-        defineReadOnly(this, "address", address);
-        defineReadOnly(this, "functions", {});
+        this.interface = getStatic<(contractInterface: ContractInterface) => Interface>(new.target, "getInterface")(contractInterface);
+        this.address = address;
+        this.functions = {};
 
         const uniqueNames: { [ name: string ]: Array<string> } = { };
         const uniqueSignatures: { [ signature: string ]: boolean } = { };
@@ -169,7 +169,7 @@ export class Planner {
     calls: {call: FunctionCall, replacesState: boolean}[];
 
     constructor() {
-        defineReadOnly(this, "state", new StateValue());
+        this.state = new StateValue();
         this.calls = [];
     }
 
