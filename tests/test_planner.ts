@@ -151,7 +151,7 @@ describe('Planner', () => {
 
     it('requires argument counts to match the function definition', () => {
         const planner = new Planner();
-        expect(() => planner.addCommand(Math.add(1))).to.throw();
+        expect(() => planner.add(Math.add(1))).to.throw();
     });
 
     it('plans a call to a function that takes and replaces the current state', () => {
