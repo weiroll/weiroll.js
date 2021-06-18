@@ -277,9 +277,10 @@ export class Planner {
 
             // Figure out where to put the return value
             let ret = 0xff;
-            if(replacesState) {
-                ret = 0xfe;
-            } else if(commandVisibility[i] != -1) {
+            if(commandVisibility[i] != -1) {
+                if(replacesState) {
+                    throw new Error(`Return value of ${call.fragment.name} cannot be used to replace state and in another function`);
+                }
                 ret = state.length;
 
                 // Is there a spare state slot?
@@ -300,6 +301,8 @@ export class Planner {
                 if(isDynamicType(call.fragment.outputs[0])) {
                     ret |= 0x80;
                 }
+            } else if(replacesState) {
+                ret = 0xfe;
             }
 
             commands.push(hexConcat([
