@@ -3,7 +3,7 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { hexDataSlice } from '@ethersproject/bytes';
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { Contract, Planner } from '../src';
+import { Contract, Planner, ReturnValue } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
 
