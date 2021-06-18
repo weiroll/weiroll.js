@@ -52,7 +52,9 @@ export interface FunctionCall {
 
 export type ContractFunction = (...args: Array<any>) => FunctionCall;
 
-export function isDynamicType(param: ParamType): boolean {
+export function isDynamicType(param?: ParamType): boolean {
+    if (typeof param === "undefined") return false
+
     return ["string", "bytes", "array", "tuple"].includes(param.baseType);
 }
 
@@ -185,7 +187,7 @@ export class Planner {
         const commandIndex = this.calls.length;
         this.calls.push({call, replacesState: false});
         
-        if(call.fragment.outputs.length != 1) {
+        if(call.fragment.outputs?.length != 1) {
             return null;
         }
         return new ReturnValue(call.fragment.outputs[0], this, commandIndex);
@@ -200,7 +202,7 @@ export class Planner {
             }
         }
 
-        if(call.fragment.outputs.length != 1 || call.fragment.outputs[0].type != 'bytes[]') {
+        if(call.fragment.outputs?.length != 1 || call.fragment.outputs[0].type != 'bytes[]') {
             throw new Error("Function replacing state must return a bytes[]");
         }
 
@@ -293,7 +295,7 @@ export class Planner {
                     state.push('0x');
                 }
 
-                if(isDynamicType(call.fragment.outputs[0])) {
+                if(isDynamicType(call.fragment.outputs?.[0])) {
                     ret |= 0x80;
                 }
             } else if(replacesState) {
