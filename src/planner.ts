@@ -1,5 +1,3 @@
-'use strict';
-
 import {
   Contract as EthersContract,
   ContractInterface,
@@ -80,16 +78,17 @@ function buildCall(
   contract: Contract,
   fragment: FunctionFragment
 ): ContractFunction {
-  return function(...args: Array<any>): FunctionCall {
-    if (args.length != fragment.inputs.length) {
+  return function call(...args: Array<any>): FunctionCall {
+    if (args.length !== fragment.inputs.length) {
       throw new Error(
         `Function ${fragment.name} has ${fragment.inputs.length} arguments but ${args.length} provided`
       );
     }
+
     const encodedArgs = args.map((arg, idx) => {
       const param = fragment.inputs[idx];
       if (isValue(arg)) {
-        if (arg.param.type != param.type) {
+        if (arg.param.type !== param.type) {
           // Todo: type casting rules
           throw new Error(
             `Cannot pass value of type ${arg.param.type} to input of type ${param.type}`
@@ -100,6 +99,7 @@ function buildCall(
         return abiEncodeSingle(param, arg);
       }
     });
+
     return { contract, fragment, args: encodedArgs };
   };
 }
@@ -121,7 +121,7 @@ class BaseContract {
 
     const uniqueNames: { [name: string]: Array<string> } = {};
     const uniqueSignatures: { [signature: string]: boolean } = {};
-    Object.keys(this.interface.functions).forEach(signature => {
+    Object.keys(this.interface.functions).forEach((signature) => {
       const fragment = this.interface.functions[signature];
 
       // Check that the signature is unique; if not the ABI generation has
@@ -141,7 +141,7 @@ class BaseContract {
         uniqueNames[name].push(signature);
       }
 
-      if ((<Contract>this)[signature] == null) {
+      if ((this as Contract)[signature] == null) {
         defineReadOnly<any, any>(this, signature, buildCall(this, fragment));
       }
 
@@ -153,7 +153,7 @@ class BaseContract {
       }
     });
 
-    Object.keys(uniqueNames).forEach(name => {
+    Object.keys(uniqueNames).forEach((name) => {
       // Ambiguous names to not get attached as bare names
       const signatures = uniqueNames[name];
       if (signatures.length > 1) {
@@ -164,8 +164,8 @@ class BaseContract {
 
       // If overwriting a member property that is null, swallow the error
       try {
-        if ((<Contract>this)[name] == null) {
-          defineReadOnly(<Contract>this, name, (<Contract>this)[signature]);
+        if ((this as Contract)[name] == null) {
+          defineReadOnly(this as Contract, name, (this as Contract)[signature]);
         }
       } catch (e) {}
 
@@ -204,7 +204,7 @@ export class Planner {
   add(call: FunctionCall): ReturnValue | null {
     for (let arg of call.args) {
       if (arg instanceof ReturnValue) {
-        if (arg.planner != this) {
+        if (arg.planner !== this) {
           throw new Error('Cannot reuse return values across planners');
         }
       }
@@ -213,7 +213,7 @@ export class Planner {
     const commandIndex = this.calls.length;
     this.calls.push({ call, replacesState: false });
 
-    if (call.fragment.outputs?.length != 1) {
+    if (call.fragment.outputs?.length !== 1) {
       return null;
     }
     return new ReturnValue(call.fragment.outputs[0], this, commandIndex);
@@ -222,15 +222,15 @@ export class Planner {
   replaceState(call: FunctionCall) {
     for (let arg of call.args) {
       if (arg instanceof ReturnValue) {
-        if (arg.planner != this) {
+        if (arg.planner !== this) {
           throw new Error('Cannot reuse return values across planners');
         }
       }
     }
 
     if (
-      call.fragment.outputs?.length != 1 ||
-      call.fragment.outputs[0].type != 'bytes[]'
+      call.fragment.outputs?.length !== 1 ||
+      call.fragment.outputs[0].type !== 'bytes[]'
     ) {
       throw new Error('Function replacing state must return a bytes[]');
     }
@@ -303,7 +303,7 @@ export class Planner {
 
       // Figure out where to put the return value
       let ret = 0xff;
-      if (commandVisibility[i] != -1) {
+      if (commandVisibility[i] !== -1) {
         if (replacesState) {
           throw new Error(
             `Return value of ${call.fragment.name} cannot be used to replace state and in another function`
@@ -328,7 +328,7 @@ export class Planner {
         // Make the slot available when it's not needed
         nextDeadSlot.push({ slot: ret, dies: commandVisibility[i] });
 
-        if (ret == state.length) {
+        if (ret === state.length) {
           state.push('0x');
         }
 
