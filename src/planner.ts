@@ -1,7 +1,5 @@
-import {
-  Contract as EthersContract,
-  ContractInterface,
-} from '@ethersproject/contracts';
+import { ContractInterface } from '@ethersproject/contracts';
+import type { Contract as EthersContract } from '@ethersproject/contracts';
 import {
   Interface,
   FunctionFragment,
