@@ -41,12 +41,12 @@
   },
   "size-limit": [
     {
-      "path": "dist/weiroll.cjs.production.min.js",
-      "limit": "10 KB"
+      "path": "dist/weiroll.js.cjs.production.min.js",
+      "limit": "35 KB"
     },
     {
-      "path": "dist/weiroll.esm.js",
-      "limit": "10 KB"
+      "path": "dist/weiroll.js.esm.js",
+      "limit": "35 KB"
     }
   ],
   "homepage": "https://github.com/weiroll/weiroll.js#readme",
