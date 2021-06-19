@@ -1,11 +1,7 @@
 import { ContractInterface } from '@ethersproject/contracts';
 import type { Contract as EthersContract } from '@ethersproject/contracts';
-import {
-  Interface,
-  FunctionFragment,
-  ParamType,
-  defaultAbiCoder,
-} from '@ethersproject/abi';
+import { Interface, ParamType, defaultAbiCoder } from '@ethersproject/abi';
+import type { FunctionFragment } from '@ethersproject/abi';
 import { defineReadOnly, getStatic } from '@ethersproject/properties';
 import { hexConcat, hexDataSlice, hexlify } from '@ethersproject/bytes';
 import { Heap } from 'heap-js';
