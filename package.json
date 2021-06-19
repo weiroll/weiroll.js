@@ -26,7 +26,8 @@
     "type": "git",
     "url": "git+https://github.com/weiroll/weiroll.js.git"
   },
-  "author": "",
+  "author": "@weiroll",
+  "module": "dist/weiroll.js.esm.js",
   "license": "MIT",
   "bugs": {
     "url": "https://github.com/weiroll/weiroll.js/issues"
