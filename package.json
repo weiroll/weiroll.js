@@ -17,7 +17,7 @@
     "build": "tsdx build",
     "tsdx-test": "tsdx test",
     "lint": "tsdx lint",
-    "prepare": "tsdx build",
+    "prepare": "husky install && tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
     "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\""
@@ -32,11 +32,6 @@
     "url": "https://github.com/weiroll/weiroll.js/issues"
   },
   "peerDependencies": {},
-  "husky": {
-    "hooks": {
-      "pre-commit": "yarn format && yarn lint"
-    }
-  },
   "prettier": {
     "printWidth": 80,
     "semi": true,
