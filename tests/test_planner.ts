@@ -261,8 +261,12 @@ describe('Planner', () => {
       subplanner2.add(Math.add(sum, 3));
 
       const planner = new Planner();
-      planner.addSubplan(SubplanContract.subplan(subplanner1, subplanner1.state));
-      planner.addSubplan(SubplanContract.subplan(subplanner2, subplanner2.state));
+      planner.addSubplan(
+        SubplanContract.subplan(subplanner1, subplanner1.state)
+      );
+      planner.addSubplan(
+        SubplanContract.subplan(subplanner2, subplanner2.state)
+      );
 
       const { commands, state } = planner.plan();
       expect(commands).to.deep.equal([
@@ -301,8 +305,12 @@ describe('Planner', () => {
       subplanner.add(Math.add(1, 2));
 
       const planner = new Planner();
-      expect(() => planner.addSubplan(SubplanContract.subplan(subplanner, []))).to.throw();
-      expect(() => planner.addSubplan(SubplanContract.subplan([], subplanner.state))).to.throw();
+      expect(() =>
+        planner.addSubplan(SubplanContract.subplan(subplanner, []))
+      ).to.throw();
+      expect(() =>
+        planner.addSubplan(SubplanContract.subplan([], subplanner.state))
+      ).to.throw();
     });
 
     it("doesn't allow more than one subplan per call", () => {
@@ -316,7 +324,11 @@ describe('Planner', () => {
       subplanner.add(Math.add(1, 2));
 
       const planner = new Planner();
-      expect(() => planner.addSubplan(MultiSubplanContract.subplan(subplanner, subplanner, subplanner.state))).to.throw();
+      expect(() =>
+        planner.addSubplan(
+          MultiSubplanContract.subplan(subplanner, subplanner, subplanner.state)
+        )
+      ).to.throw();
     });
 
     it("doesn't allow more than one state array per call", () => {
@@ -330,7 +342,15 @@ describe('Planner', () => {
       subplanner.add(Math.add(1, 2));
 
       const planner = new Planner();
-      expect(() => planner.addSubplan(MultiStateContract.subplan(subplanner, subplanner.state, subplanner.state))).to.throw();
+      expect(() =>
+        planner.addSubplan(
+          MultiStateContract.subplan(
+            subplanner,
+            subplanner.state,
+            subplanner.state
+          )
+        )
+      ).to.throw();
     });
 
     it('requires subplan functions return bytes32[]', () => {
@@ -344,13 +364,17 @@ describe('Planner', () => {
       subplanner.add(Math.add(1, 2));
 
       const planner = new Planner();
-      expect(() => planner.addSubplan(BadSubplanContract.subplan(subplanner, subplanner.state))).to.throw();
+      expect(() =>
+        planner.addSubplan(
+          BadSubplanContract.subplan(subplanner, subplanner.state)
+        )
+      ).to.throw();
     });
 
     it('forbids infinite loops', () => {
       const planner = new Planner();
       planner.addSubplan(SubplanContract.subplan(planner, planner.state));
-      expect(() => planner.plan()).to.throw("A planner cannot contain itself");
-    })
+      expect(() => planner.plan()).to.throw('A planner cannot contain itself');
+    });
   });
 });
