@@ -1,13 +1,11 @@
-import * as chai from 'chai';
 import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { hexDataSlice } from '@ethersproject/bytes';
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { Contract, Planner, ReturnValue } from '../src/planner';
+import { Contract, Planner } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const SAMPLE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
 describe('Contract', () => {
@@ -55,12 +53,9 @@ describe('Planner', () => {
     const planner = new Planner();
     const sum1 = planner.add(Math.add(1, 2));
     const sum2 = planner.add(Math.add(3, 4));
-    const sum3 = planner.add(Math.add(sum1, sum2));
+    planner.add(Math.add(sum1, sum2));
 
-    expect(planner.calls.length).to.equal(3);
-    expect(sum1.commandIndex).to.equal(0);
-    expect(sum2.commandIndex).to.equal(1);
-    expect(sum3.commandIndex).to.equal(2);
+    expect(planner.commands.length).to.equal(3);
   });
 
   it('plans a simple program', () => {
@@ -80,8 +75,8 @@ describe('Planner', () => {
 
   it('deduplicates identical literals', () => {
     const planner = new Planner();
-    const sum1 = planner.add(Math.add(1, 1));
-    const { commands, state } = planner.plan();
+    planner.add(Math.add(1, 1));
+    const { state } = planner.plan();
 
     expect(state.length).to.equal(1);
   });
@@ -94,10 +89,10 @@ describe('Planner', () => {
 
     expect(commands.length).to.equal(2);
     expect(commands[0]).to.equal(
-      '0x771602f70001ffffffffff00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+      '0x771602f70001ffffffffff01eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
     expect(commands[1]).to.equal(
-      '0x771602f70002ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+      '0x771602f70102ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
     expect(state.length).to.equal(3);
@@ -168,10 +163,10 @@ describe('Planner', () => {
 
     expect(commands.length).to.equal(2);
     expect(commands[0]).to.equal(
-      '0xd824ccf38081ffffffffff80eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+      '0xd824ccf38081ffffffffff81eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
     expect(commands[1]).to.equal(
-      '0x367bbd7880ffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+      '0x367bbd7881ffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
     expect(state.length).to.equal(2);

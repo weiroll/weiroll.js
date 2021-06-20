@@ -4,7 +4,6 @@ import { Interface, ParamType, defaultAbiCoder } from '@ethersproject/abi';
 import type { FunctionFragment } from '@ethersproject/abi';
 import { defineReadOnly, getStatic } from '@ethersproject/properties';
 import { hexConcat, hexDataSlice, hexlify } from '@ethersproject/bytes';
-import { Heap } from 'heap-js';
 
 export interface Value {
   readonly param: ParamType;
@@ -26,13 +25,11 @@ export class LiteralValue implements Value {
 
 export class ReturnValue implements Value {
   readonly param: ParamType;
-  readonly planner: Planner;
-  readonly commandIndex: number; // Index of the command in the array of planned commands
+  readonly command: Command; // Function call we want the return value of
 
-  constructor(param: ParamType, planner: Planner, commandIndex: number) {
+  constructor(param: ParamType, command: Command) {
     this.param = param;
-    this.planner = planner;
-    this.commandIndex = commandIndex;
+    this.command = command;
   }
 }
 
@@ -186,42 +183,36 @@ export class Contract extends BaseContract {
   readonly [key: string]: ContractFunction | any;
 }
 
+class Command {
+  readonly call: FunctionCall;
+  readonly replacesState: boolean;
+
+  constructor(call: FunctionCall, replacesState: boolean) {
+    this.call = call;
+    this.replacesState = replacesState;
+  }
+}
+
 export class Planner {
   readonly state: StateValue;
-  calls: { call: FunctionCall; replacesState: boolean }[];
+  commands: Command[];
 
   constructor() {
     this.state = new StateValue();
-    this.calls = [];
+    this.commands = [];
   }
 
   add(call: FunctionCall): ReturnValue | null {
-    for (let arg of call.args) {
-      if (arg instanceof ReturnValue) {
-        if (arg.planner !== this) {
-          throw new Error('Cannot reuse return values across planners');
-        }
-      }
-    }
-
-    const commandIndex = this.calls.length;
-    this.calls.push({ call, replacesState: false });
+    const command = new Command(call, false);
+    this.commands.push(command);
 
     if (call.fragment.outputs?.length !== 1) {
       return null;
     }
-    return new ReturnValue(call.fragment.outputs[0], this, commandIndex);
+    return new ReturnValue(call.fragment.outputs[0], command);
   }
 
   replaceState(call: FunctionCall) {
-    for (let arg of call.args) {
-      if (arg instanceof ReturnValue) {
-        if (arg.planner !== this) {
-          throw new Error('Cannot reuse return values across planners');
-        }
-      }
-    }
-
     if (
       call.fragment.outputs?.length !== 1 ||
       call.fragment.outputs[0].type !== 'bytes[]'
@@ -229,61 +220,59 @@ export class Planner {
       throw new Error('Function replacing state must return a bytes[]');
     }
 
-    this.calls.push({ call, replacesState: true });
+    this.commands.push(new Command(call, true));
   }
 
   plan(): { commands: string[]; state: string[] } {
     // Tracks the last time a literal is used in the program
-    let literalVisibility = new Map<string, number>();
+    let literalVisibility = new Map<string, Command>();
     // Tracks the last time a command's output is used in the program
-    let commandVisibility: number[] = Array(this.calls.length).fill(-1);
+    let commandVisibility = new Map<Command, Command>();
 
     // Build visibility maps
-    for (let i = 0; i < this.calls.length; i++) {
-      const { call } = this.calls[i];
-      for (let arg of call.args) {
+    for(let command of this.commands) {
+      for (let arg of command.call.args) {
         if (arg instanceof ReturnValue) {
-          commandVisibility[arg.commandIndex] = i;
+          commandVisibility.set(arg.command, command);
         } else if (arg instanceof LiteralValue) {
-          literalVisibility.set(arg.value, i);
+          literalVisibility.set(arg.value, command);
         } else if (!(arg instanceof StateValue)) {
           throw new Error(`Unknown function argument type '${typeof arg}'`);
         }
       }
     }
 
-    // Tracks when state slots go out of scope
-    type HeapEntry = { slot: number; dies: number };
-    let nextDeadSlot = new Heap<HeapEntry>((a, b) => a.dies - b.dies);
-
+    // Keeps a list of state slots that are out-of-scope.
+    let freeSlots: number[] = [];
+    // Maps from commands to the slots that expire on execution (if any)
+    let stateExpirations = new Map<Command, number[]>();
+    
     // Tracks the state slot each literal is stored in
     let literalSlotMap = new Map<string, number>();
     // Tracks the state slot each return value is stored in
-    let returnSlotMap = Array(this.calls.length);
+    let returnSlotMap = new Map<Command, number>();
 
-    let commands: string[] = [];
+    let encodedCommands: string[] = [];
     let state: string[] = [];
 
-    // Prepopulate the state with literals
-    literalVisibility.forEach((dies, literal) => {
+    // Prepopulate the state and state expirations with literals
+    literalVisibility.forEach((lastCommand, literal) => {
       const slot = state.length;
-      literalSlotMap.set(literal, slot);
-      nextDeadSlot.push({ slot, dies });
       state.push(literal);
+      literalSlotMap.set(literal, slot);
+      stateExpirations.set(lastCommand, (stateExpirations.get(lastCommand) || []).concat([slot]));
     });
 
     // Build commands, and add state entries as needed
-    for (let i = 0; i < this.calls.length; i++) {
-      const { call, replacesState } = this.calls[i];
-
+    for(let command of this.commands) {
       // Build a list of argument value indexes
       const args = new Uint8Array(7).fill(0xff);
-      call.args.forEach((arg, j) => {
-        let slot;
+      command.call.args.forEach((arg, j) => {
+        let slot: number;
         if (arg instanceof ReturnValue) {
-          slot = returnSlotMap[arg.commandIndex];
+          slot = returnSlotMap.get(arg.command) as number;
         } else if (arg instanceof LiteralValue) {
-          slot = literalSlotMap.get(arg.value);
+          slot = literalSlotMap.get(arg.value) as number;
         } else if (arg instanceof StateValue) {
           slot = 0xfe;
         } else {
@@ -295,54 +284,51 @@ export class Planner {
         args[j] = slot;
       });
 
+      // Add any newly unused state slots to the list
+      freeSlots = freeSlots.concat(stateExpirations.get(command) || []);
+
       // Figure out where to put the return value
       let ret = 0xff;
-      if (commandVisibility[i] !== -1) {
-        if (replacesState) {
+      if (commandVisibility.has(command)) {
+        if (command.replacesState) {
           throw new Error(
-            `Return value of ${call.fragment.name} cannot be used to replace state and in another function`
+            `Return value of ${command.call.fragment.name} cannot be used to replace state and in another function`
           );
         }
         ret = state.length;
 
-        const topNode = nextDeadSlot.peek();
-
-        // Is there a spare state slot?
-        if (typeof topNode !== 'undefined' && topNode.dies <= i) {
-          const extractedTopNode = nextDeadSlot.pop();
-
-          if (extractedTopNode) {
-            ret = extractedTopNode?.slot;
-          }
+        if(freeSlots.length > 0) {
+          ret = freeSlots.pop() as number;
         }
 
         // Store the slot mapping
-        returnSlotMap[i] = ret;
+        returnSlotMap.set(command, ret);
 
         // Make the slot available when it's not needed
-        nextDeadSlot.push({ slot: ret, dies: commandVisibility[i] });
+        const expiryCommand = commandVisibility.get(command) as Command;
+        stateExpirations.set(expiryCommand, (stateExpirations.get(expiryCommand) || []).concat([ret]));
 
         if (ret === state.length) {
           state.push('0x');
         }
 
-        if (isDynamicType(call.fragment.outputs?.[0])) {
+        if (isDynamicType(command.call.fragment.outputs?.[0])) {
           ret |= 0x80;
         }
-      } else if (replacesState) {
+      } else if (command.replacesState) {
         ret = 0xfe;
       }
 
-      commands.push(
+      encodedCommands.push(
         hexConcat([
-          call.contract.interface.getSighash(call.fragment),
+          command.call.contract.interface.getSighash(command.call.fragment),
           hexlify(args),
           hexlify([ret]),
-          call.contract.address,
+          command.call.contract.address,
         ])
       );
     }
 
-    return { commands, state };
+    return { commands: encodedCommands, state };
   }
 }
