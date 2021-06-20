@@ -193,6 +193,21 @@ class Command {
   }
 }
 
+interface PlannerState {
+  // Maps from a command to the slot used for its return value
+  returnSlotMap: Map<Command, number>;
+  // Maps from a literal to the slot used to store it
+  literalSlotMap: Map<string, number>;
+  // An array of unused state slots
+  freeSlots: Array<number>;
+  // Maps from a command to the slots that expire when it's executed
+  stateExpirations: Map<Command, number[]>;
+  // Maps from a command to the last command that consumes its output
+  commandVisibility: Map<Command, Command>;
+  // The initial state array
+  state: Array<string>;
+}
+
 export class Planner {
   readonly state: StateValue;
   commands: Command[];
@@ -223,7 +238,10 @@ export class Planner {
     this.commands.push(new Command(call, true));
   }
 
-  private preplan(): {commandVisibility: Map<Command, Command>, literalVisibility: Map<string, Command>} {
+  private preplan(commands: Array<Command>): {
+    commandVisibility: Map<Command, Command>;
+    literalVisibility: Map<string, Command>;
+  } {
     // Tracks the last time a literal is used in the program
     let literalVisibility = new Map<string, Command>();
     // Tracks the last time a command's output is used in the program
@@ -232,11 +250,13 @@ export class Planner {
     let seen = new Set<Command>();
 
     // Build visibility maps
-    for (let command of this.commands) {
+    for (let command of commands) {
       for (let arg of command.call.args) {
         if (arg instanceof ReturnValue) {
-          if(!seen.has(arg.command)) {
-            throw new Error(`Cannot reference the return value of a command not in the planner`);
+          if (!seen.has(arg.command)) {
+            throw new Error(
+              `Cannot reference the return value of a command not in the planner`
+            );
           }
           commandVisibility.set(arg.command, command);
         } else if (arg instanceof LiteralValue) {
@@ -248,10 +268,14 @@ export class Planner {
       seen.add(command);
     }
 
-    return {commandVisibility, literalVisibility};
+    return { commandVisibility, literalVisibility };
   }
 
-  private buildCommandArgs(command: Command, returnSlotMap: Map<Command, number>, literalSlotMap: Map<string, number>): string {
+  private buildCommandArgs(
+    command: Command,
+    returnSlotMap: Map<Command, number>,
+    literalSlotMap: Map<string, number>
+  ): string {
     // Build a list of argument value indexes
     const args = new Uint8Array(7).fill(0xff);
     command.call.args.forEach((arg, j) => {
@@ -274,11 +298,69 @@ export class Planner {
     return hexlify(args);
   }
 
-  plan(): { commands: string[]; state: string[] } {
-    const { commandVisibility, literalVisibility } = this.preplan();
+  private buildCommands(commands: Array<Command>, ps: PlannerState): Array<string> {
+    const encodedCommands = new Array<string>();
+    // Build commands, and add state entries as needed
+    for (let command of commands) {
+      const args = this.buildCommandArgs(
+        command,
+        ps.returnSlotMap,
+        ps.literalSlotMap
+      );
 
-    // Keeps a list of state slots that are out-of-scope.
-    let freeSlots = new Array<number>();
+      // Add any newly unused state slots to the list
+      ps.freeSlots = ps.freeSlots.concat(ps.stateExpirations.get(command) || []);
+
+      // Figure out where to put the return value
+      let ret = 0xff;
+      if (ps.commandVisibility.has(command)) {
+        if (command.replacesState) {
+          throw new Error(
+            `Return value of ${command.call.fragment.name} cannot be used to replace state and in another function`
+          );
+        }
+        ret = ps.state.length;
+
+        if (ps.freeSlots.length > 0) {
+          ret = ps.freeSlots.pop() as number;
+        }
+
+        // Store the slot mapping
+        ps.returnSlotMap.set(command, ret);
+
+        // Make the slot available when it's not needed
+        const expiryCommand = ps.commandVisibility.get(command) as Command;
+        ps.stateExpirations.set(
+          expiryCommand,
+          (ps.stateExpirations.get(expiryCommand) || []).concat([ret])
+        );
+
+        if (ret === ps.state.length) {
+          ps.state.push('0x');
+        }
+
+        if (isDynamicType(command.call.fragment.outputs?.[0])) {
+          ret |= 0x80;
+        }
+      } else if (command.replacesState) {
+        ret = 0xfe;
+      }
+
+      encodedCommands.push(
+        hexConcat([
+          command.call.contract.interface.getSighash(command.call.fragment),
+          args,
+          hexlify([ret]),
+          command.call.contract.address,
+        ])
+      );
+    }
+    return encodedCommands;
+  }
+
+  plan(): { commands: string[]; state: string[] } {
+    const { commandVisibility, literalVisibility } = this.preplan(this.commands);
+
     // Maps from commands to the slots that expire on execution (if any)
     let stateExpirations = new Map<Command, number[]>();
 
@@ -298,62 +380,16 @@ export class Planner {
       );
     });
 
-    // Tracks the state slot each return value is stored in
-    let returnSlotMap = new Map<Command, number>();
-
-    let encodedCommands = new Array<string>();
-
-    // Build commands, and add state entries as needed
-    for (let command of this.commands) {
-      const args = this.buildCommandArgs(command, returnSlotMap, literalSlotMap);
-
-      // Add any newly unused state slots to the list
-      freeSlots = freeSlots.concat(stateExpirations.get(command) || []);
-
-      // Figure out where to put the return value
-      let ret = 0xff;
-      if (commandVisibility.has(command)) {
-        if (command.replacesState) {
-          throw new Error(
-            `Return value of ${command.call.fragment.name} cannot be used to replace state and in another function`
-          );
-        }
-        ret = state.length;
-
-        if (freeSlots.length > 0) {
-          ret = freeSlots.pop() as number;
-        }
-
-        // Store the slot mapping
-        returnSlotMap.set(command, ret);
-
-        // Make the slot available when it's not needed
-        const expiryCommand = commandVisibility.get(command) as Command;
-        stateExpirations.set(
-          expiryCommand,
-          (stateExpirations.get(expiryCommand) || []).concat([ret])
-        );
-
-        if (ret === state.length) {
-          state.push('0x');
-        }
-
-        if (isDynamicType(command.call.fragment.outputs?.[0])) {
-          ret |= 0x80;
-        }
-      } else if (command.replacesState) {
-        ret = 0xfe;
-      }
-
-      encodedCommands.push(
-        hexConcat([
-          command.call.contract.interface.getSighash(command.call.fragment),
-          args,
-          hexlify([ret]),
-          command.call.contract.address,
-        ])
-      );
+    const ps: PlannerState = {
+      returnSlotMap: new Map<Command, number>(),
+      literalSlotMap,
+      freeSlots: new Array<number>(),
+      stateExpirations,
+      commandVisibility,
+      state
     }
+
+    let encodedCommands = this.buildCommands(this.commands, ps);
 
     return { commands: encodedCommands, state };
   }
