@@ -1,6 +1,10 @@
 {
   "name": "@weiroll/weiroll.js",
   "version": "0.2.0",
+  "jest": {
+    "preset": "ts-jest",
+    "testEnvironment": "node"
+  },
   "description": "The weiroll planner in JS",
   "main": "dist/index.js",
   "typings": "dist/index.d.ts",
