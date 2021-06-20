@@ -377,7 +377,7 @@ export class Planner {
     const encodedCommands = new Array<string>();
     // Build commands, and add state entries as needed
     for (let command of this.commands) {
-      if (command.type == CommandType.SUBPLAN) {
+      if (command.type === CommandType.SUBPLAN) {
         // Find the subplan
         const subplanner = (
           command.call.args.find(
@@ -410,8 +410,8 @@ export class Planner {
       let ret = 0xff;
       if (ps.commandVisibility.has(command)) {
         if (
-          command.type == CommandType.RAWCALL ||
-          command.type == CommandType.SUBPLAN
+          command.type === CommandType.RAWCALL ||
+          command.type === CommandType.SUBPLAN
         ) {
           throw new Error(
             `Return value of ${command.call.fragment.name} cannot be used to replace state and in another function`
@@ -441,8 +441,8 @@ export class Planner {
           ret |= 0x80;
         }
       } else if (
-        command.type == CommandType.RAWCALL ||
-        command.type == CommandType.SUBPLAN
+        command.type === CommandType.RAWCALL ||
+        command.type === CommandType.SUBPLAN
       ) {
         ret = 0xfe;
       }
