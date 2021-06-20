@@ -298,7 +298,10 @@ export class Planner {
     return hexlify(args);
   }
 
-  private buildCommands(commands: Array<Command>, ps: PlannerState): Array<string> {
+  private buildCommands(
+    commands: Array<Command>,
+    ps: PlannerState
+  ): Array<string> {
     const encodedCommands = new Array<string>();
     // Build commands, and add state entries as needed
     for (let command of commands) {
@@ -309,7 +312,9 @@ export class Planner {
       );
 
       // Add any newly unused state slots to the list
-      ps.freeSlots = ps.freeSlots.concat(ps.stateExpirations.get(command) || []);
+      ps.freeSlots = ps.freeSlots.concat(
+        ps.stateExpirations.get(command) || []
+      );
 
       // Figure out where to put the return value
       let ret = 0xff;
@@ -359,7 +364,9 @@ export class Planner {
   }
 
   plan(): { commands: string[]; state: string[] } {
-    const { commandVisibility, literalVisibility } = this.preplan(this.commands);
+    const { commandVisibility, literalVisibility } = this.preplan(
+      this.commands
+    );
 
     // Maps from commands to the slots that expire on execution (if any)
     let stateExpirations = new Map<Command, number[]>();
@@ -386,8 +393,8 @@ export class Planner {
       freeSlots: new Array<number>(),
       stateExpirations,
       commandVisibility,
-      state
-    }
+      state,
+    };
 
     let encodedCommands = this.buildCommands(this.commands, ps);
 
