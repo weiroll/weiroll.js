@@ -301,15 +301,15 @@ export class Planner {
     seen?: Set<Command>,
     planners?: Set<Planner>
   ) {
-    if(seen === undefined) {
+    if (seen === undefined) {
       seen = new Set<Command>();
     }
-    if(planners === undefined) {
+    if (planners === undefined) {
       planners = new Set<Planner>();
     }
 
-    if(planners.has(this)) {
-      throw new Error("A planner cannot contain itself");
+    if (planners.has(this)) {
+      throw new Error('A planner cannot contain itself');
     }
     planners.add(this);
 
@@ -326,7 +326,12 @@ export class Planner {
         } else if (arg instanceof LiteralValue) {
           literalVisibility.set(arg.value, command);
         } else if (arg instanceof SubplanValue) {
-          arg.planner.preplan(commandVisibility, literalVisibility, seen, planners);
+          arg.planner.preplan(
+            commandVisibility,
+            literalVisibility,
+            seen,
+            planners
+          );
         } else if (!(arg instanceof StateValue)) {
           throw new Error(`Unknown function argument type '${typeof arg}'`);
         }
