@@ -1,5 +1,3 @@
-import * as chai from 'chai';
-import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { hexDataSlice } from '@ethersproject/bytes';
 import { defaultAbiCoder } from '@ethersproject/abi';
@@ -20,21 +18,22 @@ describe('Contract', () => {
   });
 
   it('wraps contract objects and exposes their functions', () => {
-    expect(Math.add).to.not.be.undefined;
+    // there is no function in jest as 'to.not.be.undefined'
+    expect(Math.add).toBeTruthy;
   });
 
   it('returns a FunctionCall when contract functions are called', () => {
     const result = Math.add(1, 2);
 
-    expect(result.contract).to.equal(Math);
-    expect(result.fragment).to.equal(Math.interface.getFunction('add'));
+    expect(result.contract).toEqual(Math);
+    expect(result.fragment).toEqual(Math.interface.getFunction('add'));
 
     const args = result.args;
-    expect(args.length).to.equal(2);
-    expect(args[0].param).to.equal(Math.interface.getFunction('add').inputs[0]);
-    expect(args[0].value).to.equal(defaultAbiCoder.encode(['uint'], [1]));
-    expect(args[1].param).to.equal(Math.interface.getFunction('add').inputs[1]);
-    expect(args[1].value).to.equal(defaultAbiCoder.encode(['uint'], [2]));
+    expect(args.length).toEqual(2);
+    expect(args[0].param).toEqual(Math.interface.getFunction('add').inputs[0]);
+    expect(args[0].value).toEqual(defaultAbiCoder.encode(['uint'], [1]));
+    expect(args[1].param).toEqual(Math.interface.getFunction('add').inputs[1]);
+    expect(args[1].value).toEqual(defaultAbiCoder.encode(['uint'], [2]));
   });
 });
 
@@ -57,10 +56,10 @@ describe('Planner', () => {
     const sum2 = planner.add(Math.add(3, 4));
     const sum3 = planner.add(Math.add(sum1, sum2));
 
-    expect(planner.calls.length).to.equal(3);
-    expect(sum1.commandIndex).to.equal(0);
-    expect(sum2.commandIndex).to.equal(1);
-    expect(sum3.commandIndex).to.equal(2);
+    expect(planner.calls.length).toEqual(3);
+    expect(sum1.commandIndex).toEqual(0);
+    expect(sum2.commandIndex).toEqual(1);
+    expect(sum3.commandIndex).toEqual(2);
   });
 
   it('plans a simple program', () => {
@@ -68,14 +67,14 @@ describe('Planner', () => {
     planner.add(Math.add(1, 2));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(1);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(1);
+    expect(commands[0]).toEqual(
       '0x771602f70001ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(2);
-    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint'], [1]));
-    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [2]));
+    expect(state.length).toEqual(2);
+    expect(state[0]).toEqual(defaultAbiCoder.encode(['uint'], [1]));
+    expect(state[1]).toEqual(defaultAbiCoder.encode(['uint'], [2]));
   });
 
   it('deduplicates identical literals', () => {
@@ -83,7 +82,7 @@ describe('Planner', () => {
     const sum1 = planner.add(Math.add(1, 1));
     const { commands, state } = planner.plan();
 
-    expect(state.length).to.equal(1);
+    expect(state.length).toEqual(1);
   });
 
   it('plans a program that uses return values', () => {
@@ -92,18 +91,18 @@ describe('Planner', () => {
     planner.add(Math.add(sum1, 3));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(2);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(2);
+    expect(commands[0]).toEqual(
       '0x771602f70001ffffffffff00eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
-    expect(commands[1]).to.equal(
+    expect(commands[1]).toEqual(
       '0x771602f70002ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(3);
-    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint'], [1]));
-    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [2]));
-    expect(state[2]).to.equal(defaultAbiCoder.encode(['uint'], [3]));
+    expect(state.length).toEqual(3);
+    expect(state[0]).toEqual(defaultAbiCoder.encode(['uint'], [1]));
+    expect(state[1]).toEqual(defaultAbiCoder.encode(['uint'], [2]));
+    expect(state[2]).toEqual(defaultAbiCoder.encode(['uint'], [3]));
   });
 
   it('plans a program that needs extra state slots for intermediate values', () => {
@@ -112,17 +111,17 @@ describe('Planner', () => {
     planner.add(Math.add(1, sum1));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(2);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(2);
+    expect(commands[0]).toEqual(
       '0x771602f70000ffffffffff01eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
-    expect(commands[1]).to.equal(
+    expect(commands[1]).toEqual(
       '0x771602f70001ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(2);
-    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint'], [1]));
-    expect(state[1]).to.equal('0x');
+    expect(state.length).toEqual(2);
+    expect(state[0]).toEqual(defaultAbiCoder.encode(['uint'], [1]));
+    expect(state[1]).toEqual('0x');
   });
 
   it('plans a program that takes dynamic arguments', () => {
@@ -130,13 +129,13 @@ describe('Planner', () => {
     planner.add(Strings.strlen('Hello, world!'));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(1);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(1);
+    expect(commands[0]).toEqual(
       '0x367bbd7880ffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(1);
-    expect(state[0]).to.equal(
+    expect(state.length).toEqual(1);
+    expect(state[0]).toEqual(
       hexDataSlice(defaultAbiCoder.encode(['string'], ['Hello, world!']), 32)
     );
   });
@@ -146,16 +145,16 @@ describe('Planner', () => {
     planner.add(Strings.strcat('Hello, ', 'world!'));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(1);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(1);
+    expect(commands[0]).toEqual(
       '0xd824ccf38081ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(2);
-    expect(state[0]).to.equal(
+    expect(state.length).toEqual(2);
+    expect(state[0]).toEqual(
       hexDataSlice(defaultAbiCoder.encode(['string'], ['Hello, ']), 32)
     );
-    expect(state[1]).to.equal(
+    expect(state[1]).toEqual(
       hexDataSlice(defaultAbiCoder.encode(['string'], ['world!']), 32)
     );
   });
@@ -166,26 +165,26 @@ describe('Planner', () => {
     planner.add(Strings.strlen(str));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(2);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(2);
+    expect(commands[0]).toEqual(
       '0xd824ccf38081ffffffffff80eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
-    expect(commands[1]).to.equal(
+    expect(commands[1]).toEqual(
       '0x367bbd7880ffffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(2);
-    expect(state[0]).to.equal(
+    expect(state.length).toEqual(2);
+    expect(state[0]).toEqual(
       hexDataSlice(defaultAbiCoder.encode(['string'], ['Hello, ']), 32)
     );
-    expect(state[1]).to.equal(
+    expect(state[1]).toEqual(
       hexDataSlice(defaultAbiCoder.encode(['string'], ['world!']), 32)
     );
   });
 
   it('requires argument counts to match the function definition', () => {
     const planner = new Planner();
-    expect(() => planner.add(Math.add(1))).to.throw();
+    expect(() => planner.add(Math.add(1))).toThrow();
   });
 
   it('plans a call to a function that takes and replaces the current state', () => {
@@ -199,11 +198,11 @@ describe('Planner', () => {
     planner.replaceState(TestContract.useState(planner.state));
     const { commands, state } = planner.plan();
 
-    expect(commands.length).to.equal(1);
-    expect(commands[0]).to.equal(
+    expect(commands.length).toEqual(1);
+    expect(commands[0]).toEqual(
       '0x08f389c8fefffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
-    expect(state.length).to.equal(0);
+    expect(state.length).toEqual(0);
   });
 });
