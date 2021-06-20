@@ -223,16 +223,21 @@ export class Planner {
     this.commands.push(new Command(call, true));
   }
 
-  plan(): { commands: string[]; state: string[] } {
+  private preplan(): {commandVisibility: Map<Command, Command>, literalVisibility: Map<string, Command>} {
     // Tracks the last time a literal is used in the program
     let literalVisibility = new Map<string, Command>();
     // Tracks the last time a command's output is used in the program
     let commandVisibility = new Map<Command, Command>();
 
+    let seen = new Set<Command>();
+
     // Build visibility maps
-    for(let command of this.commands) {
+    for (let command of this.commands) {
       for (let arg of command.call.args) {
         if (arg instanceof ReturnValue) {
+          if(!seen.has(arg.command)) {
+            throw new Error(`Cannot reference the return value of a command not in the planner`);
+          }
           commandVisibility.set(arg.command, command);
         } else if (arg instanceof LiteralValue) {
           literalVisibility.set(arg.value, command);
@@ -240,49 +245,67 @@ export class Planner {
           throw new Error(`Unknown function argument type '${typeof arg}'`);
         }
       }
+      seen.add(command);
     }
 
+    return {commandVisibility, literalVisibility};
+  }
+
+  private buildCommandArgs(command: Command, returnSlotMap: Map<Command, number>, literalSlotMap: Map<string, number>): string {
+    // Build a list of argument value indexes
+    const args = new Uint8Array(7).fill(0xff);
+    command.call.args.forEach((arg, j) => {
+      let slot: number;
+      if (arg instanceof ReturnValue) {
+        slot = returnSlotMap.get(arg.command) as number;
+      } else if (arg instanceof LiteralValue) {
+        slot = literalSlotMap.get(arg.value) as number;
+      } else if (arg instanceof StateValue) {
+        slot = 0xfe;
+      } else {
+        throw new Error(`Unknown function argument type '${typeof arg}'`);
+      }
+      if (isDynamicType(arg.param)) {
+        slot |= 0x80;
+      }
+      args[j] = slot;
+    });
+
+    return hexlify(args);
+  }
+
+  plan(): { commands: string[]; state: string[] } {
+    const { commandVisibility, literalVisibility } = this.preplan();
+
     // Keeps a list of state slots that are out-of-scope.
-    let freeSlots: number[] = [];
+    let freeSlots = new Array<number>();
     // Maps from commands to the slots that expire on execution (if any)
     let stateExpirations = new Map<Command, number[]>();
-    
+
     // Tracks the state slot each literal is stored in
     let literalSlotMap = new Map<string, number>();
-    // Tracks the state slot each return value is stored in
-    let returnSlotMap = new Map<Command, number>();
 
-    let encodedCommands: string[] = [];
-    let state: string[] = [];
+    let state = new Array<string>();
 
     // Prepopulate the state and state expirations with literals
     literalVisibility.forEach((lastCommand, literal) => {
       const slot = state.length;
       state.push(literal);
       literalSlotMap.set(literal, slot);
-      stateExpirations.set(lastCommand, (stateExpirations.get(lastCommand) || []).concat([slot]));
+      stateExpirations.set(
+        lastCommand,
+        (stateExpirations.get(lastCommand) || []).concat([slot])
+      );
     });
 
+    // Tracks the state slot each return value is stored in
+    let returnSlotMap = new Map<Command, number>();
+
+    let encodedCommands = new Array<string>();
+
     // Build commands, and add state entries as needed
-    for(let command of this.commands) {
-      // Build a list of argument value indexes
-      const args = new Uint8Array(7).fill(0xff);
-      command.call.args.forEach((arg, j) => {
-        let slot: number;
-        if (arg instanceof ReturnValue) {
-          slot = returnSlotMap.get(arg.command) as number;
-        } else if (arg instanceof LiteralValue) {
-          slot = literalSlotMap.get(arg.value) as number;
-        } else if (arg instanceof StateValue) {
-          slot = 0xfe;
-        } else {
-          throw new Error(`Unknown function argument type '${typeof arg}'`);
-        }
-        if (isDynamicType(arg.param)) {
-          slot |= 0x80;
-        }
-        args[j] = slot;
-      });
+    for (let command of this.commands) {
+      const args = this.buildCommandArgs(command, returnSlotMap, literalSlotMap);
 
       // Add any newly unused state slots to the list
       freeSlots = freeSlots.concat(stateExpirations.get(command) || []);
@@ -297,7 +320,7 @@ export class Planner {
         }
         ret = state.length;
 
-        if(freeSlots.length > 0) {
+        if (freeSlots.length > 0) {
           ret = freeSlots.pop() as number;
         }
 
@@ -306,7 +329,10 @@ export class Planner {
 
         // Make the slot available when it's not needed
         const expiryCommand = commandVisibility.get(command) as Command;
-        stateExpirations.set(expiryCommand, (stateExpirations.get(expiryCommand) || []).concat([ret]));
+        stateExpirations.set(
+          expiryCommand,
+          (stateExpirations.get(expiryCommand) || []).concat([ret])
+        );
 
         if (ret === state.length) {
           state.push('0x');
@@ -322,7 +348,7 @@ export class Planner {
       encodedCommands.push(
         hexConcat([
           command.call.contract.interface.getSighash(command.call.fragment),
-          hexlify(args),
+          args,
           hexlify([ret]),
           command.call.contract.address,
         ])
