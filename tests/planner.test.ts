@@ -1,17 +1,16 @@
 import { ethers } from 'ethers';
 import { hexDataSlice } from '@ethersproject/bytes';
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { Contract, Planner, ReturnValue } from '../src/planner';
+import { Contract, Planner } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
 
-const ZERO_ADDRESS = '0x0000000000000000000000000000000000000000';
 const SAMPLE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
 describe('Contract', () => {
   let Math: Contract;
 
-  before(() => {
+  beforeAll(() => {
     Math = Contract.fromEthersContract(
       new ethers.Contract(SAMPLE_ADDRESS, mathABI.abi)
     );
@@ -41,7 +40,7 @@ describe('Planner', () => {
   let Math: Contract;
   let Strings: Contract;
 
-  before(() => {
+  beforeAll(() => {
     Math = Contract.fromEthersContract(
       new ethers.Contract(SAMPLE_ADDRESS, mathABI.abi)
     );
@@ -57,9 +56,9 @@ describe('Planner', () => {
     const sum3 = planner.add(Math.add(sum1, sum2));
 
     expect(planner.calls.length).toEqual(3);
-    expect(sum1.commandIndex).toEqual(0);
-    expect(sum2.commandIndex).toEqual(1);
-    expect(sum3.commandIndex).toEqual(2);
+    expect(sum1!.commandIndex).toEqual(0);
+    expect(sum2!.commandIndex).toEqual(1);
+    expect(sum3!.commandIndex).toEqual(2);
   });
 
   it('plans a simple program', () => {
@@ -79,8 +78,7 @@ describe('Planner', () => {
 
   it('deduplicates identical literals', () => {
     const planner = new Planner();
-    const sum1 = planner.add(Math.add(1, 1));
-    const { commands, state } = planner.plan();
+    const { state } = planner.plan();
 
     expect(state.length).toEqual(1);
   });
