@@ -454,7 +454,9 @@ export class Planner {
         command.type === CommandType.RAWCALL ||
         command.type === CommandType.SUBPLAN
       ) {
-        ret = 0xfe;
+        if(command.call.fragment.outputs && command.call.fragment.outputs.length == 1) {
+          ret = 0xfe;
+        }
       }
 
       encodedCommands.push(
