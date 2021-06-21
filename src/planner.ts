@@ -275,10 +275,10 @@ export class Planner {
     }
 
     if (
-      call.fragment.outputs?.length !== 1 ||
+      call.fragment.outputs?.length === 1 &&
       call.fragment.outputs[0].type !== 'bytes[]'
     ) {
-      throw new Error('Subplans must return a bytes[] replacement state');
+      throw new Error('Subplans must return a bytes[] replacement state or nothing');
     }
 
     this.commands.push(new Command(call, CommandType.SUBPLAN));
@@ -319,17 +319,22 @@ export class Planner {
         if (arg instanceof ReturnValue) {
           if (!seen.has(arg.command)) {
             throw new Error(
-              `Cannot reference the return value of a command not in the planner`
+              `Return value from "${arg.command.call.fragment.name}" is not visible here`
             );
           }
           commandVisibility.set(arg.command, command);
         } else if (arg instanceof LiteralValue) {
           literalVisibility.set(arg.value, command);
         } else if (arg instanceof SubplanValue) {
+          let subplanSeen = seen;
+          if(!command.call.fragment.outputs || command.call.fragment.outputs.length === 0) {
+            // Read-only subplan; return values aren't visible externally
+            subplanSeen = new Set<Command>(seen);
+          }
           arg.planner.preplan(
             commandVisibility,
             literalVisibility,
-            seen,
+            subplanSeen,
             planners
           );
         } else if (!(arg instanceof StateValue)) {
