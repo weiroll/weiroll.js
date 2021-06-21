@@ -278,7 +278,9 @@ export class Planner {
       call.fragment.outputs?.length === 1 &&
       call.fragment.outputs[0].type !== 'bytes[]'
     ) {
-      throw new Error('Subplans must return a bytes[] replacement state or nothing');
+      throw new Error(
+        'Subplans must return a bytes[] replacement state or nothing'
+      );
     }
 
     this.commands.push(new Command(call, CommandType.SUBPLAN));
@@ -327,7 +329,10 @@ export class Planner {
           literalVisibility.set(arg.value, command);
         } else if (arg instanceof SubplanValue) {
           let subplanSeen = seen;
-          if(!command.call.fragment.outputs || command.call.fragment.outputs.length === 0) {
+          if (
+            !command.call.fragment.outputs ||
+            command.call.fragment.outputs.length === 0
+          ) {
             // Read-only subplan; return values aren't visible externally
             subplanSeen = new Set<Command>(seen);
           }
