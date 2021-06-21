@@ -454,7 +454,10 @@ export class Planner {
         command.type === CommandType.RAWCALL ||
         command.type === CommandType.SUBPLAN
       ) {
-        if(command.call.fragment.outputs && command.call.fragment.outputs.length == 1) {
+        if (
+          command.call.fragment.outputs &&
+          command.call.fragment.outputs.length === 1
+        ) {
           ret = 0xfe;
         }
       }
