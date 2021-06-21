@@ -205,7 +205,13 @@ describe('Planner', () => {
   describe('addSubplan()', () => {
     const SubplanContract = Contract.fromEthersContract(
       new ethers.Contract(SAMPLE_ADDRESS, [
-        'function subplan(bytes32[] commands, bytes[] state) returns(bytes[])',
+        'function execute(bytes32[] commands, bytes[] state) returns(bytes[])',
+      ])
+    );
+
+    const ReadonlySubplanContract = Contract.fromEthersContract(
+      new ethers.Contract(SAMPLE_ADDRESS, [
+        'function execute(bytes32[] commands, bytes[] state)',
       ])
     );
 
@@ -214,11 +220,11 @@ describe('Planner', () => {
       subplanner.add(Math.add(1, 2));
 
       const planner = new Planner();
-      planner.addSubplan(SubplanContract.subplan(subplanner, subplanner.state));
+      planner.addSubplan(SubplanContract.execute(subplanner, subplanner.state));
 
       const { commands, state } = planner.plan();
       expect(commands).to.deep.equal([
-        '0x28699e9d82fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        '0xde792d5f82fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       ]);
 
       expect(state.length).to.equal(3);
@@ -241,13 +247,13 @@ describe('Planner', () => {
       const sum = subplanner.add(Math.add(1, 2));
 
       const planner = new Planner();
-      planner.addSubplan(SubplanContract.subplan(subplanner, subplanner.state));
+      planner.addSubplan(SubplanContract.execute(subplanner, subplanner.state));
       planner.add(Math.add(sum, 3));
 
       const { commands } = planner.plan();
       expect(commands).to.deep.equal([
         // Invoke subplanner
-        '0x28699e9d83fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        '0xde792d5f83fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
         // sum + 3
         '0x771602f70102ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       ]);
@@ -262,18 +268,18 @@ describe('Planner', () => {
 
       const planner = new Planner();
       planner.addSubplan(
-        SubplanContract.subplan(subplanner1, subplanner1.state)
+        SubplanContract.execute(subplanner1, subplanner1.state)
       );
       planner.addSubplan(
-        SubplanContract.subplan(subplanner2, subplanner2.state)
+        SubplanContract.execute(subplanner2, subplanner2.state)
       );
 
       const { commands, state } = planner.plan();
       expect(commands).to.deep.equal([
         // Invoke subplanner1
-        '0x28699e9d83fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        '0xde792d5f83fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
         // Invoke subplanner2
-        '0x28699e9d84fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+        '0xde792d5f84fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
       ]);
 
       expect(state.length).to.equal(5);
@@ -297,7 +303,7 @@ describe('Planner', () => {
       const planner = new Planner();
       planner.add(Math.add(sum, 3));
 
-      expect(() => planner.plan()).to.throw();
+      expect(() => planner.plan()).to.throw('Return value from "add" is not visible here');
     });
 
     it('requires calls to addSubplan to have subplan and state args', () => {
@@ -306,17 +312,17 @@ describe('Planner', () => {
 
       const planner = new Planner();
       expect(() =>
-        planner.addSubplan(SubplanContract.subplan(subplanner, []))
-      ).to.throw();
+        planner.addSubplan(SubplanContract.execute(subplanner, []))
+      ).to.throw("Subplans must take planner and state arguments");
       expect(() =>
-        planner.addSubplan(SubplanContract.subplan([], subplanner.state))
-      ).to.throw();
+        planner.addSubplan(SubplanContract.execute([], subplanner.state))
+      ).to.throw("Subplans must take planner and state arguments");
     });
 
     it("doesn't allow more than one subplan per call", () => {
       const MultiSubplanContract = Contract.fromEthersContract(
         new ethers.Contract(SAMPLE_ADDRESS, [
-          'function subplan(bytes32[] commands, bytes32[] commands2, bytes[] state) returns(bytes[])',
+          'function execute(bytes32[] commands, bytes32[] commands2, bytes[] state) returns(bytes[])',
         ])
       );
 
@@ -326,15 +332,15 @@ describe('Planner', () => {
       const planner = new Planner();
       expect(() =>
         planner.addSubplan(
-          MultiSubplanContract.subplan(subplanner, subplanner, subplanner.state)
+          MultiSubplanContract.execute(subplanner, subplanner, subplanner.state)
         )
-      ).to.throw();
+      ).to.throw("Subplans can only take one planner argument");
     });
 
     it("doesn't allow more than one state array per call", () => {
       const MultiStateContract = Contract.fromEthersContract(
         new ethers.Contract(SAMPLE_ADDRESS, [
-          'function subplan(bytes32[] commands, bytes[] state, bytes[] state2) returns(bytes[])',
+          'function execute(bytes32[] commands, bytes[] state, bytes[] state2) returns(bytes[])',
         ])
       );
 
@@ -344,19 +350,19 @@ describe('Planner', () => {
       const planner = new Planner();
       expect(() =>
         planner.addSubplan(
-          MultiStateContract.subplan(
+          MultiStateContract.execute(
             subplanner,
             subplanner.state,
             subplanner.state
           )
         )
-      ).to.throw();
+      ).to.throw("Subplans can only take one state argument");
     });
 
-    it('requires subplan functions return bytes32[]', () => {
+    it('requires subplan functions return bytes32[] or nothing', () => {
       const BadSubplanContract = Contract.fromEthersContract(
         new ethers.Contract(SAMPLE_ADDRESS, [
-          'function subplan(bytes32[] commands, bytes[] state) returns(uint)',
+          'function execute(bytes32[] commands, bytes[] state) returns(uint)',
         ])
       );
 
@@ -366,15 +372,39 @@ describe('Planner', () => {
       const planner = new Planner();
       expect(() =>
         planner.addSubplan(
-          BadSubplanContract.subplan(subplanner, subplanner.state)
+          BadSubplanContract.execute(subplanner, subplanner.state)
         )
-      ).to.throw();
+      ).to.throw("Subplans must return a bytes[] replacement state or nothing");
     });
 
     it('forbids infinite loops', () => {
       const planner = new Planner();
-      planner.addSubplan(SubplanContract.subplan(planner, planner.state));
+      planner.addSubplan(SubplanContract.execute(planner, planner.state));
       expect(() => planner.plan()).to.throw('A planner cannot contain itself');
     });
+
+    it('allows for subplans without return values', () => {
+      const subplanner = new Planner();
+      subplanner.add(Math.add(1, 2));
+
+      const planner = new Planner();
+      planner.addSubplan(ReadonlySubplanContract.execute(subplanner, subplanner.state));
+
+      const { commands } = planner.plan();
+      expect(commands).to.deep.equal([
+        '0xde792d5f82fefffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      ]);
+    });
+
+    it('does not allow return values from inside read-only subplans to be used outside them', () => {
+      const subplanner = new Planner();
+      const sum = subplanner.add(Math.add(1, 2));
+
+      const planner = new Planner();
+      planner.addSubplan(ReadonlySubplanContract.execute(subplanner, subplanner.state));
+      planner.add(Math.add(sum, 3));
+
+      expect(() => planner.plan()).to.throw('Return value from "add" is not visible here');
+    })
   });
 });
