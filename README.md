@@ -11,16 +11,28 @@ npm install --save @weiroll/weiroll.js
 ## Usage
 
 ### Wrapping contracts
-Weiroll programs consist of a sequence of delegatecalls to library functions in external contracts. Before you can start creating a weiroll program, you will need to create interfaces for at least one library contract you intend to use.
+Weiroll programs consist of a sequence of calls to functions in external contracts. These calls can either be delegate calls to dedicated library contracts, or standard/static calls to external contracts. Before you can start creating a weiroll program, you will need to create interfaces for at least one contract you intend to use.
 
 The easiest way to do this is by wrapping ethers.js contract instances:
 
 ```javascript
 const ethersContract = new ethers.Contract(address, abi);
-const contract = weiroll.Contract.fromEthersContract(ethersContract);
+const contract = weiroll.Contract.newLibrary(ethersContract);
 ```
 
-You can repeat this for each library contract you wish to use. A weiroll `Contract` object can be reused across as many planner instances as you wish; there is no need to construct them again for each new program.
+This will produce a contract object that generates delegate calls to the contract in `ethersContract`.
+
+To create regular or static calls to an external contract, use `newContract`:
+
+```javascript
+const ethersContract = new ethers.Contract(address, abi);
+// Makes calls using CALL
+const contract = weiroll.Contract.newContract(ethersContract);
+// Makes calls using STATICCALL
+const contract = weiroll.Contract.newContract(ethersContract, CallType.STATICCALL);
+```
+
+You can repeat this for each contract you wish to use. A weiroll `Contract` object can be reused across as many planner instances as you wish; there is no need to construct them again for each new program.
 
 ### Planning programs
 First, instantiate a planner:
@@ -42,6 +54,14 @@ planner.add(contract.func2(ret));
 ```
 
 Remember to wrap each call to a contract in `planner.add`. Attempting to pass the result of one contract function directly to another will not work - each one needs to be added to the planner!
+
+For calls to external contracts, you can also pass a value in ether to send:
+
+```javascript
+planner.add(contract.func(a, b).withValue(c));
+```
+
+`withValue` takes the same argument types as contract functions, so you can pass the return value of another function, or a literal value. You cannot combine `withValue` with delegate calls (eg, calls to a library created with `Contract.newLibrary`) or static calls.
 
 Once you are done planning operations, generate the program:
 
