@@ -29,7 +29,7 @@ const ethersContract = new ethers.Contract(address, abi);
 // Makes calls using CALL
 const contract = weiroll.Contract.newContract(ethersContract);
 // Makes calls using STATICCALL
-const contract = weiroll.Contract.newContract(ethersContract, CallType.STATICCALL);
+const contract = weiroll.Contract.newContract(ethersContract, CommandFlags.STATICCALL);
 ```
 
 You can repeat this for each contract you wish to use. A weiroll `Contract` object can be reused across as many planner instances as you wish; there is no need to construct them again for each new program.
