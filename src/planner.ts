@@ -3,7 +3,7 @@ import type { Contract as EthersContract } from '@ethersproject/contracts';
 import { Interface, ParamType, defaultAbiCoder } from '@ethersproject/abi';
 import type { FunctionFragment } from '@ethersproject/abi';
 import { defineReadOnly, getStatic } from '@ethersproject/properties';
-import { hexConcat, hexDataSlice, hexlify } from '@ethersproject/bytes';
+import { hexConcat, hexDataSlice } from '@ethersproject/bytes';
 
 export interface Value {
   readonly param: ParamType;
@@ -53,6 +53,7 @@ class SubplanValue implements Value {
 
 export interface FunctionCall {
   readonly contract: Contract;
+  readonly calltype: CallType;
   readonly fragment: FunctionFragment;
   readonly args: Value[];
 }
@@ -103,16 +104,24 @@ function buildCall(
       }
     });
 
-    return { contract, fragment, args: encodedArgs };
+    return { contract, calltype: contract.calltype, fragment, args: encodedArgs };
   };
+}
+
+export enum CallType {
+  DELEGATECALL = 0x00,
+  CALL = 0x01,
+  STATICCALL = 0x02,
+  CALL_WITH_VALUE = 0x03
 }
 
 class BaseContract {
   readonly address: string;
+  readonly calltype: CallType;
   readonly interface: Interface;
   readonly functions: { [name: string]: ContractFunction };
 
-  constructor(address: string, contractInterface: ContractInterface) {
+  constructor(address: string, contractInterface: ContractInterface, calltype: CallType) {
     this.interface = getStatic<
       (contractInterface: ContractInterface) => Interface
     >(
@@ -120,6 +129,7 @@ class BaseContract {
       'getInterface'
     )(contractInterface);
     this.address = address;
+    this.calltype = calltype;
     this.functions = {};
 
     const uniqueNames: { [name: string]: Array<string> } = {};
@@ -178,8 +188,12 @@ class BaseContract {
     });
   }
 
-  static fromEthersContract(contract: EthersContract): Contract {
-    return new Contract(contract.address, contract.interface);
+  static createContract(contract: EthersContract, calltype = CallType.CALL): Contract {
+    return new Contract(contract.address, contract.interface, calltype);
+  }
+
+  static createLibrary(contract: EthersContract): Contract {
+    return new Contract(contract.address, contract.interface, CallType.DELEGATECALL);
   }
 
   static getInterface(contractInterface: ContractInterface): Interface {
@@ -199,6 +213,15 @@ enum CommandType {
   CALL,
   RAWCALL,
   SUBPLAN,
+}
+
+enum CommandFlags {
+  CALLTYPE_DELEGATECALL = 0x00,
+  CALLTYPE_CALL = 0x01,
+  CALLTYPE_STATICCALL = 0x02,
+  CALLTYPE_CALL_WITH_VALUE = 0x03,
+  EXTENDED_COMMAND = 0x40,
+  TUPLE_RETURN = 0x80,
 }
 
 class Command {
@@ -224,6 +247,10 @@ interface PlannerState {
   commandVisibility: Map<Command, Command>;
   // The initial state array
   state: Array<string>;
+}
+
+function padArray(a: Array<number>, len: number, value: number): Array<number> {
+  return a.concat(new Array<number>(len - a.length).fill(value));
 }
 
 export class Planner {
@@ -357,10 +384,10 @@ export class Planner {
     returnSlotMap: Map<Command, number>,
     literalSlotMap: Map<string, number>,
     state: Array<string>
-  ): string {
+  ): Array<number> {
     // Build a list of argument value indexes
-    const args = new Uint8Array(7).fill(0xff);
-    command.call.args.forEach((arg, j) => {
+    const args = new Array<number>();
+    command.call.args.forEach((arg) => {
       let slot: number;
       if (arg instanceof ReturnValue) {
         slot = returnSlotMap.get(arg.command) as number;
@@ -377,10 +404,10 @@ export class Planner {
       if (isDynamicType(arg.param)) {
         slot |= 0x80;
       }
-      args[j] = slot;
+      args.push(slot);
     });
 
-    return hexlify(args);
+    return args;
   }
 
   private buildCommands(ps: PlannerState): Array<string> {
@@ -404,12 +431,33 @@ export class Planner {
         ps.freeSlots.push(ps.state.length - 1);
       }
 
+      let flags: CommandFlags = 0x00;
+
+      switch(command.call.calltype) {
+      case CallType.DELEGATECALL:
+        flags |= CommandFlags.CALLTYPE_DELEGATECALL;
+        break;
+      case CallType.CALL:
+        flags |= CommandFlags.CALLTYPE_CALL;
+        break;
+      case CallType.STATICCALL:
+        flags |= CommandFlags.CALLTYPE_STATICCALL;
+        break;
+      case CallType.CALL_WITH_VALUE:
+        flags |= CommandFlags.CALLTYPE_CALL_WITH_VALUE;
+        break;
+      }
+
       const args = this.buildCommandArgs(
         command,
         ps.returnSlotMap,
         ps.literalSlotMap,
         ps.state
       );
+
+      if(args.length > 6) {
+        flags |= CommandFlags.EXTENDED_COMMAND;
+      }
 
       // Add any newly unused state slots to the list
       ps.freeSlots = ps.freeSlots.concat(
@@ -462,14 +510,32 @@ export class Planner {
         }
       }
 
-      encodedCommands.push(
-        hexConcat([
-          command.call.contract.interface.getSighash(command.call.fragment),
-          args,
-          hexlify([ret]),
-          command.call.contract.address,
-        ])
-      );
+      if((flags & CommandFlags.EXTENDED_COMMAND) === CommandFlags.EXTENDED_COMMAND) {
+        // Extended command
+        encodedCommands.push(
+          hexConcat([
+            command.call.contract.interface.getSighash(command.call.fragment),
+            [flags, 0, 0, 0, 0, 0, 0, ret],
+            command.call.contract.address,
+          ])
+        );
+        encodedCommands.push(
+          hexConcat([
+            padArray(args, 32, 0xff)
+          ])
+        );
+      } else {
+        // Standard command
+        encodedCommands.push(
+          hexConcat([
+            command.call.contract.interface.getSighash(command.call.fragment),
+            [flags],
+            padArray(args, 6, 0xff),
+            [ret],
+            command.call.contract.address,
+          ])
+        );
+      }
     }
     return encodedCommands;
   }
