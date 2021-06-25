@@ -2,7 +2,7 @@ import { expect } from 'chai';
 import { ethers } from 'ethers';
 import { hexConcat, hexDataSlice } from '@ethersproject/bytes';
 import { defaultAbiCoder } from '@ethersproject/abi';
-import { CallType, Contract, Planner } from '../src/planner';
+import { CommandFlags, Contract, Planner } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
 
@@ -434,7 +434,7 @@ describe('Planner', () => {
   it('plans STATICCALLs', () => {
     let Math = Contract.createContract(
       new ethers.Contract(SAMPLE_ADDRESS, mathABI.abi),
-      CallType.STATICCALL
+      CommandFlags.STATICCALL
     );
 
     const planner = new Planner();
@@ -486,7 +486,7 @@ describe('Planner', () => {
 
     const StaticMath = Contract.createContract(
       new ethers.Contract(SAMPLE_ADDRESS, mathABI.abi),
-      CallType.STATICCALL
+      CommandFlags.STATICCALL
     );
     expect(() => StaticMath.add(1, 2).withValue(3)).to.throw(
       'Only CALL operations can send value'

@@ -51,29 +51,32 @@ class SubplanValue implements Value {
   }
 }
 
-export enum CallType {
+export enum CommandFlags {
   DELEGATECALL = 0x00,
   CALL = 0x01,
   STATICCALL = 0x02,
   CALL_WITH_VALUE = 0x03,
+  CALLTYPE_MASK = 0x03,
+  EXTENDED_COMMAND = 0x40,
+  TUPLE_RETURN = 0x80,
 }
 
 export class FunctionCall {
   readonly contract: Contract;
-  readonly calltype: CallType;
+  readonly flags: CommandFlags;
   readonly fragment: FunctionFragment;
   readonly args: Value[];
   readonly callvalue?: Value;
 
   constructor(
     contract: Contract,
-    calltype: CallType,
+    flags: CommandFlags,
     fragment: FunctionFragment,
     args: Value[],
     callvalue?: Value
   ) {
     this.contract = contract;
-    this.calltype = calltype;
+    this.flags = flags;
     this.fragment = fragment;
     this.args = args;
     this.callvalue = callvalue;
@@ -81,14 +84,14 @@ export class FunctionCall {
 
   withValue(value: Value): FunctionCall {
     if (
-      this.calltype !== CallType.CALL &&
-      this.calltype !== CallType.CALL_WITH_VALUE
+      (this.flags & CommandFlags.CALLTYPE_MASK) !== CommandFlags.CALL &&
+      (this.flags & CommandFlags.CALLTYPE_MASK) !== CommandFlags.CALL_WITH_VALUE
     ) {
       throw new Error('Only CALL operations can send value');
     }
     return new FunctionCall(
       this.contract,
-      CallType.CALL_WITH_VALUE,
+      (this.flags & ~CommandFlags.CALLTYPE_MASK) | CommandFlags.CALL_WITH_VALUE,
       this.fragment,
       this.args,
       encodeArg(value, ParamType.from('uint'))
@@ -145,20 +148,20 @@ function buildCall(
       encodeArg(arg, fragment.inputs[idx])
     );
 
-    return new FunctionCall(contract, contract.calltype, fragment, encodedArgs);
+    return new FunctionCall(contract, contract.commandflags, fragment, encodedArgs);
   };
 }
 
 class BaseContract {
   readonly address: string;
-  readonly calltype: CallType;
+  readonly commandflags: CommandFlags;
   readonly interface: Interface;
   readonly functions: { [name: string]: ContractFunction };
 
   constructor(
     address: string,
     contractInterface: ContractInterface,
-    calltype: CallType
+    commandflags: CommandFlags
   ) {
     this.interface = getStatic<
       (contractInterface: ContractInterface) => Interface
@@ -166,8 +169,12 @@ class BaseContract {
       new.target,
       'getInterface'
     )(contractInterface);
+    if((commandflags & ~CommandFlags.CALLTYPE_MASK) != 0) {
+      throw new Error("Only calltype flags may be supplied to BaseContract constructor");
+    }
+
     this.address = address;
-    this.calltype = calltype;
+    this.commandflags = commandflags;
     this.functions = {};
 
     const uniqueNames: { [name: string]: Array<string> } = {};
@@ -228,16 +235,16 @@ class BaseContract {
 
   static createContract(
     contract: EthersContract,
-    calltype = CallType.CALL
+    commandflags = CommandFlags.CALL
   ): Contract {
-    return new Contract(contract.address, contract.interface, calltype);
+    return new Contract(contract.address, contract.interface, commandflags);
   }
 
   static createLibrary(contract: EthersContract): Contract {
     return new Contract(
       contract.address,
       contract.interface,
-      CallType.DELEGATECALL
+      CommandFlags.DELEGATECALL
     );
   }
 
@@ -258,15 +265,6 @@ enum CommandType {
   CALL,
   RAWCALL,
   SUBPLAN,
-}
-
-enum CommandFlags {
-  CALLTYPE_DELEGATECALL = 0x00,
-  CALLTYPE_CALL = 0x01,
-  CALLTYPE_STATICCALL = 0x02,
-  CALLTYPE_CALL_WITH_VALUE = 0x03,
-  EXTENDED_COMMAND = 0x40,
-  TUPLE_RETURN = 0x80,
 }
 
 class Command {
@@ -390,7 +388,7 @@ export class Planner {
     // Build visibility maps
     for (let command of this.commands) {
       let inargs = command.call.args;
-      if (command.call.calltype === CallType.CALL_WITH_VALUE) {
+      if ((command.call.flags & CommandFlags.CALLTYPE_MASK) === CommandFlags.CALL_WITH_VALUE) {
         if (!command.call.callvalue) {
           throw new Error('Call with value must have a value parameter');
         }
@@ -440,7 +438,7 @@ export class Planner {
   ): Array<number> {
     // Build a list of argument value indexes
     let inargs = command.call.args;
-    if (command.call.calltype === CallType.CALL_WITH_VALUE) {
+    if ((command.call.flags & CommandFlags.CALLTYPE_MASK) === CommandFlags.CALL_WITH_VALUE) {
       if (!command.call.callvalue) {
         throw new Error('Call with value must have a value parameter');
       }
@@ -492,22 +490,7 @@ export class Planner {
         ps.freeSlots.push(ps.state.length - 1);
       }
 
-      let flags: CommandFlags = 0x00;
-
-      switch (command.call.calltype) {
-        case CallType.DELEGATECALL:
-          flags |= CommandFlags.CALLTYPE_DELEGATECALL;
-          break;
-        case CallType.CALL:
-          flags |= CommandFlags.CALLTYPE_CALL;
-          break;
-        case CallType.STATICCALL:
-          flags |= CommandFlags.CALLTYPE_STATICCALL;
-          break;
-        case CallType.CALL_WITH_VALUE:
-          flags |= CommandFlags.CALLTYPE_CALL_WITH_VALUE;
-          break;
-      }
+      let flags = command.call.flags;
 
       const args = this.buildCommandArgs(
         command,
