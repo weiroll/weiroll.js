@@ -148,7 +148,12 @@ function buildCall(
       encodeArg(arg, fragment.inputs[idx])
     );
 
-    return new FunctionCall(contract, contract.commandflags, fragment, encodedArgs);
+    return new FunctionCall(
+      contract,
+      contract.commandflags,
+      fragment,
+      encodedArgs
+    );
   };
 }
 
@@ -169,8 +174,10 @@ class BaseContract {
       new.target,
       'getInterface'
     )(contractInterface);
-    if((commandflags & ~CommandFlags.CALLTYPE_MASK) != 0) {
-      throw new Error("Only calltype flags may be supplied to BaseContract constructor");
+    if ((commandflags & ~CommandFlags.CALLTYPE_MASK) !== 0) {
+      throw new Error(
+        'Only calltype flags may be supplied to BaseContract constructor'
+      );
     }
 
     this.address = address;
@@ -388,7 +395,10 @@ export class Planner {
     // Build visibility maps
     for (let command of this.commands) {
       let inargs = command.call.args;
-      if ((command.call.flags & CommandFlags.CALLTYPE_MASK) === CommandFlags.CALL_WITH_VALUE) {
+      if (
+        (command.call.flags & CommandFlags.CALLTYPE_MASK) ===
+        CommandFlags.CALL_WITH_VALUE
+      ) {
         if (!command.call.callvalue) {
           throw new Error('Call with value must have a value parameter');
         }
@@ -438,7 +448,10 @@ export class Planner {
   ): Array<number> {
     // Build a list of argument value indexes
     let inargs = command.call.args;
-    if ((command.call.flags & CommandFlags.CALLTYPE_MASK) === CommandFlags.CALL_WITH_VALUE) {
+    if (
+      (command.call.flags & CommandFlags.CALLTYPE_MASK) ===
+      CommandFlags.CALL_WITH_VALUE
+    ) {
       if (!command.call.callvalue) {
         throw new Error('Call with value must have a value parameter');
       }
