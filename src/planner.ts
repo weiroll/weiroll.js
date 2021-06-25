@@ -51,6 +51,13 @@ class SubplanValue implements Value {
   }
 }
 
+export enum CallType {
+  DELEGATECALL = 0x00,
+  CALL = 0x01,
+  STATICCALL = 0x02,
+  CALL_WITH_VALUE = 0x03,
+}
+
 export class FunctionCall {
   readonly contract: Contract;
   readonly calltype: CallType;
@@ -58,7 +65,13 @@ export class FunctionCall {
   readonly args: Value[];
   readonly callvalue?: Value;
 
-  constructor(contract: Contract, calltype: CallType, fragment: FunctionFragment, args: Value[], callvalue?: Value) {
+  constructor(
+    contract: Contract,
+    calltype: CallType,
+    fragment: FunctionFragment,
+    args: Value[],
+    callvalue?: Value
+  ) {
     this.contract = contract;
     this.calltype = calltype;
     this.fragment = fragment;
@@ -67,10 +80,19 @@ export class FunctionCall {
   }
 
   withValue(value: Value): FunctionCall {
-    if(this.calltype != CallType.CALL && this.calltype != CallType.CALL_WITH_VALUE) {
-      throw new Error("Only CALL operations can send value");
+    if (
+      this.calltype !== CallType.CALL &&
+      this.calltype !== CallType.CALL_WITH_VALUE
+    ) {
+      throw new Error('Only CALL operations can send value');
     }
-    return new FunctionCall(this.contract, CallType.CALL_WITH_VALUE, this.fragment, this.args, encodeArg(value, ParamType.from('uint')));
+    return new FunctionCall(
+      this.contract,
+      CallType.CALL_WITH_VALUE,
+      this.fragment,
+      this.args,
+      encodeArg(value, ParamType.from('uint'))
+    );
   }
 }
 
@@ -119,24 +141,12 @@ function buildCall(
       );
     }
 
-    const encodedArgs = args.map((arg, idx) => 
+    const encodedArgs = args.map((arg, idx) =>
       encodeArg(arg, fragment.inputs[idx])
     );
 
-    return new FunctionCall(
-      contract,
-      contract.calltype,
-      fragment,
-      encodedArgs,
-    );
+    return new FunctionCall(contract, contract.calltype, fragment, encodedArgs);
   };
-}
-
-export enum CallType {
-  DELEGATECALL = 0x00,
-  CALL = 0x01,
-  STATICCALL = 0x02,
-  CALL_WITH_VALUE = 0x03,
 }
 
 class BaseContract {
@@ -380,9 +390,9 @@ export class Planner {
     // Build visibility maps
     for (let command of this.commands) {
       let inargs = command.call.args;
-      if(command.call.calltype === CallType.CALL_WITH_VALUE) {
-        if(!command.call.callvalue) {
-          throw new Error("Call with value must have a value parameter");
+      if (command.call.calltype === CallType.CALL_WITH_VALUE) {
+        if (!command.call.callvalue) {
+          throw new Error('Call with value must have a value parameter');
         }
         inargs = [command.call.callvalue].concat(inargs);
       }
@@ -430,9 +440,9 @@ export class Planner {
   ): Array<number> {
     // Build a list of argument value indexes
     let inargs = command.call.args;
-    if(command.call.calltype === CallType.CALL_WITH_VALUE) {
-      if(!command.call.callvalue) {
-        throw new Error("Call with value must have a value parameter");
+    if (command.call.calltype === CallType.CALL_WITH_VALUE) {
+      if (!command.call.callvalue) {
+        throw new Error('Call with value must have a value parameter');
       }
       inargs = [command.call.callvalue].concat(inargs);
     }

@@ -449,14 +449,12 @@ describe('Planner', () => {
 
   it('plans CALLs with value', () => {
     const Test = Contract.createContract(
-      new ethers.Contract(SAMPLE_ADDRESS, [
-        'function deposit(uint x) payable'
-      ])
+      new ethers.Contract(SAMPLE_ADDRESS, ['function deposit(uint x) payable'])
     );
 
     const planner = new Planner();
     planner.add(Test.deposit(123).withValue(456));
-    
+
     const { commands } = planner.plan();
     expect(commands.length).to.equal(1);
     expect(commands[0]).to.equal(
@@ -466,23 +464,21 @@ describe('Planner', () => {
 
   it('allows returns from other calls to be used for the value parameter', () => {
     const Test = Contract.createContract(
-      new ethers.Contract(SAMPLE_ADDRESS, [
-        'function deposit(uint x) payable'
-      ])
+      new ethers.Contract(SAMPLE_ADDRESS, ['function deposit(uint x) payable'])
     );
 
     const planner = new Planner();
     const sum = planner.add(Math.add(1, 2));
     planner.add(Test.deposit(123).withValue(sum));
-    
+
     const { commands } = planner.plan();
     expect(commands.length).to.equal(2);
     expect(commands).to.deep.equal([
       '0x771602f7000001ffffffff01eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
-      '0xb6b55f25030102ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+      '0xb6b55f25030102ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
     ]);
   });
-  
+
   it('does not allow value-calls for DELEGATECALL or STATICCALL', () => {
     expect(() => Math.add(1, 2).withValue(3)).to.throw(
       'Only CALL operations can send value'
