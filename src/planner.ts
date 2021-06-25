@@ -51,11 +51,27 @@ class SubplanValue implements Value {
   }
 }
 
-export interface FunctionCall {
+export class FunctionCall {
   readonly contract: Contract;
   readonly calltype: CallType;
   readonly fragment: FunctionFragment;
   readonly args: Value[];
+  readonly callvalue?: Value;
+
+  constructor(contract: Contract, calltype: CallType, fragment: FunctionFragment, args: Value[], callvalue?: Value) {
+    this.contract = contract;
+    this.calltype = calltype;
+    this.fragment = fragment;
+    this.args = args;
+    this.callvalue = callvalue;
+  }
+
+  withValue(value: Value): FunctionCall {
+    if(this.calltype != CallType.CALL && this.calltype != CallType.CALL_WITH_VALUE) {
+      throw new Error("Only CALL operations can send value");
+    }
+    return new FunctionCall(this.contract, CallType.CALL_WITH_VALUE, this.fragment, this.args, encodeArg(value, ParamType.from('uint')));
+  }
 }
 
 export type ContractFunction = (...args: Array<any>) => FunctionCall;
@@ -76,6 +92,22 @@ function abiEncodeSingle(param: ParamType, value: any): LiteralValue {
   return new LiteralValue(param, defaultAbiCoder.encode([param], [value]));
 }
 
+function encodeArg(arg: any, param: ParamType): Value {
+  if (isValue(arg)) {
+    if (arg.param.type !== param.type) {
+      // Todo: type casting rules
+      throw new Error(
+        `Cannot pass value of type ${arg.param.type} to input of type ${param.type}`
+      );
+    }
+    return arg;
+  } else if (arg instanceof Planner) {
+    return new SubplanValue(arg);
+  } else {
+    return abiEncodeSingle(param, arg);
+  }
+}
+
 function buildCall(
   contract: Contract,
   fragment: FunctionFragment
@@ -87,24 +119,16 @@ function buildCall(
       );
     }
 
-    const encodedArgs = args.map((arg, idx) => {
-      const param = fragment.inputs[idx];
-      if (isValue(arg)) {
-        if (arg.param.type !== param.type) {
-          // Todo: type casting rules
-          throw new Error(
-            `Cannot pass value of type ${arg.param.type} to input of type ${param.type}`
-          );
-        }
-        return arg;
-      } else if (arg instanceof Planner) {
-        return new SubplanValue(arg);
-      } else {
-        return abiEncodeSingle(param, arg);
-      }
-    });
+    const encodedArgs = args.map((arg, idx) => 
+      encodeArg(arg, fragment.inputs[idx])
+    );
 
-    return { contract, calltype: contract.calltype, fragment, args: encodedArgs };
+    return new FunctionCall(
+      contract,
+      contract.calltype,
+      fragment,
+      encodedArgs,
+    );
   };
 }
 
@@ -112,7 +136,7 @@ export enum CallType {
   DELEGATECALL = 0x00,
   CALL = 0x01,
   STATICCALL = 0x02,
-  CALL_WITH_VALUE = 0x03
+  CALL_WITH_VALUE = 0x03,
 }
 
 class BaseContract {
@@ -121,7 +145,11 @@ class BaseContract {
   readonly interface: Interface;
   readonly functions: { [name: string]: ContractFunction };
 
-  constructor(address: string, contractInterface: ContractInterface, calltype: CallType) {
+  constructor(
+    address: string,
+    contractInterface: ContractInterface,
+    calltype: CallType
+  ) {
     this.interface = getStatic<
       (contractInterface: ContractInterface) => Interface
     >(
@@ -188,12 +216,19 @@ class BaseContract {
     });
   }
 
-  static createContract(contract: EthersContract, calltype = CallType.CALL): Contract {
+  static createContract(
+    contract: EthersContract,
+    calltype = CallType.CALL
+  ): Contract {
     return new Contract(contract.address, contract.interface, calltype);
   }
 
   static createLibrary(contract: EthersContract): Contract {
-    return new Contract(contract.address, contract.interface, CallType.DELEGATECALL);
+    return new Contract(
+      contract.address,
+      contract.interface,
+      CallType.DELEGATECALL
+    );
   }
 
   static getInterface(contractInterface: ContractInterface): Interface {
@@ -344,7 +379,15 @@ export class Planner {
 
     // Build visibility maps
     for (let command of this.commands) {
-      for (let arg of command.call.args) {
+      let inargs = command.call.args;
+      if(command.call.calltype === CallType.CALL_WITH_VALUE) {
+        if(!command.call.callvalue) {
+          throw new Error("Call with value must have a value parameter");
+        }
+        inargs = [command.call.callvalue].concat(inargs);
+      }
+
+      for (let arg of inargs) {
         if (arg instanceof ReturnValue) {
           if (!seen.has(arg.command)) {
             throw new Error(
@@ -386,8 +429,16 @@ export class Planner {
     state: Array<string>
   ): Array<number> {
     // Build a list of argument value indexes
+    let inargs = command.call.args;
+    if(command.call.calltype === CallType.CALL_WITH_VALUE) {
+      if(!command.call.callvalue) {
+        throw new Error("Call with value must have a value parameter");
+      }
+      inargs = [command.call.callvalue].concat(inargs);
+    }
+
     const args = new Array<number>();
-    command.call.args.forEach((arg) => {
+    inargs.forEach((arg) => {
       let slot: number;
       if (arg instanceof ReturnValue) {
         slot = returnSlotMap.get(arg.command) as number;
@@ -433,19 +484,19 @@ export class Planner {
 
       let flags: CommandFlags = 0x00;
 
-      switch(command.call.calltype) {
-      case CallType.DELEGATECALL:
-        flags |= CommandFlags.CALLTYPE_DELEGATECALL;
-        break;
-      case CallType.CALL:
-        flags |= CommandFlags.CALLTYPE_CALL;
-        break;
-      case CallType.STATICCALL:
-        flags |= CommandFlags.CALLTYPE_STATICCALL;
-        break;
-      case CallType.CALL_WITH_VALUE:
-        flags |= CommandFlags.CALLTYPE_CALL_WITH_VALUE;
-        break;
+      switch (command.call.calltype) {
+        case CallType.DELEGATECALL:
+          flags |= CommandFlags.CALLTYPE_DELEGATECALL;
+          break;
+        case CallType.CALL:
+          flags |= CommandFlags.CALLTYPE_CALL;
+          break;
+        case CallType.STATICCALL:
+          flags |= CommandFlags.CALLTYPE_STATICCALL;
+          break;
+        case CallType.CALL_WITH_VALUE:
+          flags |= CommandFlags.CALLTYPE_CALL_WITH_VALUE;
+          break;
       }
 
       const args = this.buildCommandArgs(
@@ -455,7 +506,7 @@ export class Planner {
         ps.state
       );
 
-      if(args.length > 6) {
+      if (args.length > 6) {
         flags |= CommandFlags.EXTENDED_COMMAND;
       }
 
@@ -510,7 +561,10 @@ export class Planner {
         }
       }
 
-      if((flags & CommandFlags.EXTENDED_COMMAND) === CommandFlags.EXTENDED_COMMAND) {
+      if (
+        (flags & CommandFlags.EXTENDED_COMMAND) ===
+        CommandFlags.EXTENDED_COMMAND
+      ) {
         // Extended command
         encodedCommands.push(
           hexConcat([
@@ -519,11 +573,7 @@ export class Planner {
             command.call.contract.address,
           ])
         );
-        encodedCommands.push(
-          hexConcat([
-            padArray(args, 32, 0xff)
-          ])
-        );
+        encodedCommands.push(hexConcat([padArray(args, 32, 0xff)]));
       } else {
         // Standard command
         encodedCommands.push(
