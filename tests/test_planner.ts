@@ -512,7 +512,21 @@ describe('Planner', () => {
     );
   });
 
-  // it('supports capturing the whole return value as a bytes', () => {
+  it('supports capturing the whole return value as a bytes', () => {
+    const Test = Contract.createLibrary(
+      new ethers.Contract(SAMPLE_ADDRESS, [
+        'function returnsTuple() returns(uint a, bytes32[] b)',
+        'function acceptsBytes(bytes raw)',
+      ])
+    );
 
-  // });
+    const planner = new Planner();
+    const ret = planner.add(Test.returnsTuple().rawValue());
+    planner.add(Test.acceptsBytes(ret));
+    const { commands } = planner.plan();
+    expect(commands).to.deep.equal([
+      '0x61a7e05e80ffffffffffff80eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+      '0x3e9ef66a0080ffffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee',
+    ]);
+  });
 });

@@ -63,6 +63,12 @@ planner.add(contract.func(a, b).withValue(c));
 
 `withValue` takes the same argument types as contract functions, so you can pass the return value of another function, or a literal value. You cannot combine `withValue` with delegate calls (eg, calls to a library created with `Contract.newLibrary`) or static calls.
 
+Weiroll only supports functions that return a single value by default. If your function returns multiple values, though, you can instruct weiroll to wrap it in a `bytes`, which subsequent commands can decode and work with:
+
+```javascript
+const ret = planner.add(contract.func(a, b).rawValue());
+```
+
 Once you are done planning operations, generate the program:
 
 ```javascript

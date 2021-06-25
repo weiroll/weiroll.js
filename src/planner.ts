@@ -97,6 +97,16 @@ export class FunctionCall {
       encodeArg(value, ParamType.from('uint'))
     );
   }
+
+  rawValue(): FunctionCall {
+    return new FunctionCall(
+      this.contract,
+      this.flags | CommandFlags.TUPLE_RETURN,
+      this.fragment,
+      this.args,
+      this.callvalue
+    );
+  }
 }
 
 export type ContractFunction = (...args: Array<any>) => FunctionCall;
@@ -324,6 +334,9 @@ export class Planner {
       }
     }
 
+    if (call.flags & CommandFlags.TUPLE_RETURN) {
+      return new ReturnValue(ParamType.fromString('bytes'), command);
+    }
     if (call.fragment.outputs?.length !== 1) {
       return null;
     }
@@ -552,7 +565,10 @@ export class Planner {
           ps.state.push('0x');
         }
 
-        if (isDynamicType(command.call.fragment.outputs?.[0])) {
+        if (
+          isDynamicType(command.call.fragment.outputs?.[0]) ||
+          (command.call.flags & CommandFlags.TUPLE_RETURN) !== 0
+        ) {
           ret |= 0x80;
         }
       } else if (
