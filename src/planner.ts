@@ -359,12 +359,6 @@ export class Planner {
         }
         hasState = true;
       }
-      if (arg instanceof StateValue) {
-        if (hasState) {
-          throw new Error('Subplans can only take one state argument');
-        }
-        hasState = true;
-      }
     }
     if (!hasSubplan || !hasState) {
       throw new Error('Subplans must take planner and state arguments');
