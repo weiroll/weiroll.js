@@ -15,12 +15,7 @@ npm install --save @weiroll/weiroll.js
 ## Usage
 
 ### Wrapping contracts
-<<<<<<< HEAD
 Weiroll programs consist of a sequence of calls to functions in external contracts. These calls can either be delegate calls to dedicated library contracts, or standard/static calls to external contracts. Before you can start creating a weiroll program, you will need to create interfaces for at least one contract you intend to use.
-=======
-
-Weiroll programs consist of a sequence of delegatecalls to library functions in external contracts. Before you can start creating a weiroll program, you will need to create interfaces for at least one library contract you intend to use.
->>>>>>> main
 
 The easiest way to do this is by wrapping ethers.js contract instances:
 
