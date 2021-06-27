@@ -1,0 +1,18 @@
+{
+    "opts": {
+        "destination": "./docs/",
+        "encoding": "utf8",
+        "template": "node_modules/better-docs"
+    },
+    "plugins": [
+        "node_modules/better-docs/typescript"
+    ],
+    "source": {
+        "include": ["src", "package.json", "README.md"],
+        "includePattern": "\\.(jsx|js|ts|tsx)$"
+    },
+    "tags": {
+        "allowUnknownTags": true,
+        "dictionaries": ["jsdoc"]
+    }
+}

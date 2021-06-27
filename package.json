@@ -20,7 +20,8 @@
     "prepare": "husky install && tsdx build",
     "size": "size-limit",
     "analyze": "size-limit --why",
-    "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\""
+    "format": "prettier --write \"./src/*.{js,ts}\" \"tests/*.{js,ts}\"",
+    "docs": "jsdoc -c jsdoc.json --verbose"
   },
   "repository": {
     "type": "git",
@@ -56,9 +57,11 @@
     "@types/chai": "^4.2.18",
     "@types/mocha": "^8.2.2",
     "@types/node": "^15.12.2",
+    "better-docs": "^2.3.2",
     "chai": "^4.3.4",
     "eslint-plugin-prettier": "^3.4.0",
     "husky": "^6.0.0",
+    "jsdoc": "^3.6.7",
     "mocha": "^9.0.0",
     "prettier": "^2.3.1",
     "size-limit": "^4.12.0",

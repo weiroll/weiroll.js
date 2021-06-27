@@ -180,6 +180,10 @@ function buildCall(
   };
 }
 
+/**
+ * BaseContract
+ * @classdesc Provides the implementation of {@link Contract}.
+ */
 class BaseContract {
   readonly address: string;
   readonly commandflags: CommandFlags;
@@ -286,6 +290,12 @@ class BaseContract {
   }
 }
 
+/**
+ * Contract
+ * @extends BaseContract
+ *
+ * @classdesc Provides an intuitive interface for calling functions on contracts and libraries as part of a weiroll plan.
+ */
 export class Contract extends BaseContract {
   // The meta-class properties
   readonly [key: string]: ContractFunction | any;
