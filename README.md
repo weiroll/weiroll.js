@@ -21,19 +21,19 @@ The easiest way to do this is by wrapping ethers.js contract instances:
 
 ```javascript
 const ethersContract = new ethers.Contract(address, abi);
-const contract = weiroll.Contract.newLibrary(ethersContract);
+const contract = weiroll.Contract.createLibrary(ethersContract);
 ```
 
 This will produce a contract object that generates delegate calls to the contract in `ethersContract`.
 
-To create regular or static calls to an external contract, use `newContract`:
+To create regular or static calls to an external contract, use `createContract`:
 
 ```javascript
 const ethersContract = new ethers.Contract(address, abi);
 // Makes calls using CALL
-const contract = weiroll.Contract.newContract(ethersContract);
+const contract = weiroll.Contract.createContract(ethersContract);
 // Makes calls using STATICCALL
-const contract = weiroll.Contract.newContract(ethersContract, CommandFlags.STATICCALL);
+const contract = weiroll.Contract.createContract(ethersContract, CommandFlags.STATICCALL);
 ```
 
 You can repeat this for each contract you wish to use. A weiroll `Contract` object can be reused across as many planner instances as you wish; there is no need to construct them again for each new program.
@@ -67,6 +67,12 @@ planner.add(contract.func(a, b).withValue(c));
 ```
 
 `withValue` takes the same argument types as contract functions, so you can pass the return value of another function, or a literal value. You cannot combine `withValue` with delegate calls (eg, calls to a library created with `Contract.newLibrary`) or static calls.
+
+Likewise, if you want to make a particular call static, you can use `.staticcall()`:
+
+```javascript
+const result = planner.add(contract.func(a, b).staticcall());
+```
 
 Weiroll only supports functions that return a single value by default. If your function returns multiple values, though, you can instruct weiroll to wrap it in a `bytes`, which subsequent commands can decode and work with:
 
