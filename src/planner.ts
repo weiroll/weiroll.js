@@ -107,6 +107,19 @@ export class FunctionCall {
       this.callvalue
     );
   }
+
+  staticcall(): FunctionCall {
+    if((this.flags & CommandFlags.CALLTYPE_MASK) !== CommandFlags.CALL) {
+      throw new Error('Only CALL operations can be made static');
+    }
+    return new FunctionCall(
+      this.contract,
+      (this.flags & ~CommandFlags.CALLTYPE_MASK) | CommandFlags.STATICCALL,
+      this.fragment,
+      this.args,
+      this.callvalue
+    );
+  }
 }
 
 export type ContractFunction = (...args: Array<any>) => FunctionCall;

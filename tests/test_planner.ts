@@ -447,6 +447,21 @@ describe('Planner', () => {
     );
   });
 
+  it('plans STATICCALLs via .staticcall()', () => {
+    let Math = Contract.createContract(
+      new ethers.Contract(SAMPLE_ADDRESS, mathABI.abi)
+    );
+
+    const planner = new Planner();
+    planner.add(Math.add(1, 2).staticcall());
+    const { commands } = planner.plan();
+
+    expect(commands.length).to.equal(1);
+    expect(commands[0]).to.equal(
+      '0x771602f7020001ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+    );
+  });
+
   it('plans CALLs with value', () => {
     const Test = Contract.createContract(
       new ethers.Contract(SAMPLE_ADDRESS, ['function deposit(uint x) payable'])
@@ -490,6 +505,12 @@ describe('Planner', () => {
     );
     expect(() => StaticMath.add(1, 2).withValue(3)).to.throw(
       'Only CALL operations can send value'
+    );
+  });
+
+  it('does not allow making DELEGATECALL static', () => {
+    expect(() => Math.add(1, 2).staticcall()).to.throw(
+      'Only CALL operations can be made static'
     );
   });
 
