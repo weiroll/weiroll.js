@@ -109,7 +109,7 @@ export class FunctionCall {
   }
 
   staticcall(): FunctionCall {
-    if((this.flags & CommandFlags.CALLTYPE_MASK) !== CommandFlags.CALL) {
+    if ((this.flags & CommandFlags.CALLTYPE_MASK) !== CommandFlags.CALL) {
       throw new Error('Only CALL operations can be made static');
     }
     return new FunctionCall(
