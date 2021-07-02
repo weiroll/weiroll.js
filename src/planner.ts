@@ -7,7 +7,7 @@ import { hexConcat, hexDataSlice } from '@ethersproject/bytes';
 
 /**
  * Represents a value that can be passed to a function call.
- * 
+ *
  * This can represent a literal value, a return value from a previous function call,
  * or one of several internal placeholder value types.
  */
@@ -82,8 +82,8 @@ export enum CommandFlags {
 
 /**
  * Represents a call to a contract function as part of a Weiroll plan.
- * 
- * A `FunctionCall` is created by calling functions on a [[Contract]] object, and consumed by 
+ *
+ * A `FunctionCall` is created by calling functions on a [[Contract]] object, and consumed by
  * passing it to [[Planner.add]], [[Planner.addSubplan]] or [[Planner.replaceState]]
  */
 export class FunctionCall {
@@ -359,7 +359,7 @@ class BaseContract {
 
 /**
  * Provides a dynamically created interface to interact with Ethereum contracts via weiroll.
- * 
+ *
  * Once created using the constructor or the [[Contract.createContract]] or [[Contract.createLibrary]]
  * functions, the returned object is automatically populated with methods that match those on the
  * supplied contract. For instance, if your contract has a method `add(uint, uint)`, you can call it on the
@@ -369,11 +369,11 @@ class BaseContract {
  * const math = Contract.createLibrary(Math);
  * const result = math.add(1, 2);
  * ```
- * 
+ *
  * Calling a contract function returns a [[FunctionCall]] object, which you can pass to [[Planner.add]],
  * [[Planner.addSubplan]], or [[Planner.replaceState]] to add to the sequence of calls to plan.
  */
- export class Contract extends BaseContract {
+export class Contract extends BaseContract {
   // The meta-class properties
   readonly [key: string]: ContractFunction | any;
 }
@@ -416,7 +416,7 @@ function padArray(a: Array<number>, len: number, value: number): Array<number> {
 /**
  * [[Planner]] is the main class to use to specify a sequence of operations to execute for a
  * weiroll script.
- * 
+ *
  * To use a [[Planner]], construct it and call [[Planner.add]] with the function calls you wish
  * to execute. For example:
  * ```typescript
@@ -443,7 +443,7 @@ export class Planner {
 
   /**
    * Adds a new function call to the planner. Function calls are executed in the order they are added.
-   * 
+   *
    * If the function call has a return value, `add` returns an object representing that value, which you
    * can pass to subsequent function calls. For example:
    * ```typescript
@@ -481,26 +481,26 @@ export class Planner {
    * Adds a call to a subplan. This has the effect of instantiating a nested instance of the weiroll
    * interpreter, and is commonly used for functionality such as flashloans, control flow, or anywhere
    * else you may need to execute logic inside a callback.
-   * 
+   *
    * A [[FunctionCall]] passed to [[Planner.addSubplan]] must take another [[Planner]] object as one
    * argument, and a placeholder representing the planner state, accessible as [[Planner.state]], as
    * another. Exactly one of each argument must be provided.
-   * 
+   *
    * At runtime, the subplan is replaced by a list of commands for the subplanner (type `bytes32[]`),
    * and `planner.state` is replaced by the current state of the parent planner instance (type `bytes[]`).
-   * 
+   *
    * If the `call` returns a `bytes[]`, this will be used to replace the parent planner's state after
    * the call to the subplanner completes. Return values defined inside a subplan may be used outside that
    * subplan - both in the parent planner and in subsequent subplans - only if the `call` returns the
    * updated planner state.
-   * 
+   *
    * Example usage:
    * ```
    * const exchange = Contract.createLibrary(Exchange); // Assumes `Exchange` is an ethers.js contract
    * const events = Contract.createLibrary(Events); // Assumes `Events` is an ethers.js contract
    * const subplanner = new Planner();
    * const outqty = subplanner.add(exchange.swap(tokenb, tokena, qty));
-   * 
+   *
    * const planner = new Planner();
    * planner.addSubplan(exchange.flashswap(tokena, tokenb, qty, subplanner, planner.state));
    * planner.add(events.logUint(outqty)); // Only works if `exchange.flashswap` returns updated state
@@ -544,7 +544,7 @@ export class Planner {
   }
 
   /**
-   * Executes a [[FunctionCall]], and replaces the planner state with the value it 
+   * Executes a [[FunctionCall]], and replaces the planner state with the value it
    * returns. This can be used to execute functions that make arbitrary changes to
    * the planner state. Note that the planner library is not aware of these changes -
    * so it may produce invalid plans if you don't know what you're doing.
