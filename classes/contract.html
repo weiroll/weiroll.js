@@ -1,0 +1,413 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Contract | @weiroll/weiroll.js</title>
+	<meta name="description" content="Documentation for @weiroll/weiroll.js">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">@weiroll/weiroll.js</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../modules.html">@weiroll/weiroll.js</a>
+				</li>
+				<li>
+					<a href="contract.html">Contract</a>
+				</li>
+			</ul>
+			<h1>Class Contract</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p>Provides a dynamically created interface to interact with Ethereum contracts via weiroll.</p>
+					</div>
+					<p>Once created using the constructor or the <a href="contract.html#createcontract">Contract.createContract</a> or <a href="contract.html#createlibrary">Contract.createLibrary</a>
+						functions, the returned object is automatically populated with methods that match those on the
+						supplied contract. For instance, if your contract has a method <code>add(uint, uint)</code>, you can call it on the
+					<a href="contract.html">Contract</a> object:</p>
+					<pre><code class="language-typescript"><span style="color: #008000">// Assumes `Math` is an ethers.js Contract instance.</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">math</span><span style="color: #000000"> = </span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #267F99">Math</span><span style="color: #000000">);</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">result</span><span style="color: #000000"> = </span><span style="color: #001080">math</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #098658">1</span><span style="color: #000000">, </span><span style="color: #098658">2</span><span style="color: #000000">);</span>
+</code></pre>
+					<p>Calling a contract function returns a <a href="functioncall.html">FunctionCall</a> object, which you can pass to <a href="planner.html#add">Planner.add</a>,
+					<a href="planner.html#addsubplan">Planner.addSubplan</a>, or <a href="planner.html#replacestate">Planner.replaceState</a> to add to the sequence of calls to plan.</p>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="tsd-signature-type">BaseContract</span>
+						<ul class="tsd-hierarchy">
+							<li>
+								<span class="target">Contract</span>
+							</li>
+						</ul>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel tsd-kind-class">
+				<h3 class="tsd-before-signature">Indexable</h3>
+				<div class="tsd-signature tsd-kind-icon"><span class="tsd-signature-symbol">[</span>key: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="../modules.html#contractfunction" class="tsd-signature-type" data-tsd-kind="Type alias">ContractFunction</a><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">any</span></div>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section tsd-is-inherited">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><a href="contract.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-inherited">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="contract.html#address" class="tsd-kind-icon">address</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="contract.html#commandflags" class="tsd-kind-icon">commandflags</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="contract.html#functions" class="tsd-kind-icon">functions</a></li>
+								<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><a href="contract.html#interface" class="tsd-kind-icon">interface</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section tsd-is-inherited">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="contract.html#createcontract" class="tsd-kind-icon">create<wbr>Contract</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static"><a href="contract.html#createlibrary" class="tsd-kind-icon">create<wbr>Library</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Contract<span class="tsd-signature-symbol">(</span>address<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span>, contractInterface<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">ContractInterface</span>, commandflags<span class="tsd-signature-symbol">?: </span><a href="../enums/commandflags.html" class="tsd-signature-type" data-tsd-kind="Enumeration">CommandFlags</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="contract.html" class="tsd-signature-type" data-tsd-kind="Class">Contract</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from BaseContract.constructor</p>
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L237">planner.ts:237</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>address: <span class="tsd-signature-type">string</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The address of the contract</p>
+									</div>
+								</li>
+								<li>
+									<h5>contractInterface: <span class="tsd-signature-type">ContractInterface</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The ethers.js Interface representing the contract</p>
+									</div>
+								</li>
+								<li>
+									<h5>commandflags: <a href="../enums/commandflags.html" class="tsd-signature-type" data-tsd-kind="Enumeration">CommandFlags</a><span class="tsd-signature-symbol"> = 0</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Optional flags specifying the default execution options for all functions</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="contract.html" class="tsd-signature-type" data-tsd-kind="Class">Contract</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+					<a name="address" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> address</h3>
+					<div class="tsd-signature tsd-kind-icon">address<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">string</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from BaseContract.address</p>
+						<ul>
+							<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L231">planner.ts:231</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The address of the contract</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+					<a name="commandflags" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> commandflags</h3>
+					<div class="tsd-signature tsd-kind-icon">commandflags<span class="tsd-signature-symbol">:</span> <a href="../enums/commandflags.html" class="tsd-signature-type" data-tsd-kind="Enumeration">CommandFlags</a></div>
+					<aside class="tsd-sources">
+						<p>Inherited from BaseContract.commandflags</p>
+						<ul>
+							<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L233">planner.ts:233</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Flags specifying the default execution options for all functions</p>
+						</div>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+					<a name="functions" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> functions</h3>
+					<div class="tsd-signature tsd-kind-icon">functions<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-symbol">{}</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from BaseContract.functions</p>
+						<ul>
+							<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L237">planner.ts:237</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>A mapping from function names to <a href="../modules.html#contractfunction">ContractFunction</a>s.</p>
+						</div>
+					</div>
+					<div class="tsd-type-declaration">
+						<h4>Type declaration</h4>
+						<ul class="tsd-parameters">
+							<li class="tsd-parameter-index-signature">
+								<h5><span class="tsd-signature-symbol">[</span>name: <span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">]: </span><a href="../modules.html#contractfunction" class="tsd-signature-type" data-tsd-kind="Type alias">ContractFunction</a></h5>
+							</li>
+						</ul>
+					</div>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+					<a name="interface" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> interface</h3>
+					<div class="tsd-signature tsd-kind-icon">interface<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">Interface</span></div>
+					<aside class="tsd-sources">
+						<p>Inherited from BaseContract.interface</p>
+						<ul>
+							<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L235">planner.ts:235</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>The ethers.js Interface representing the contract</p>
+						</div>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group tsd-is-inherited">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="createcontract" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> create<wbr>Contract</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Contract<span class="tsd-signature-symbol">(</span>contract<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Contract</span>, commandflags<span class="tsd-signature-symbol">?: </span><a href="../enums/commandflags.html" class="tsd-signature-type" data-tsd-kind="Enumeration">CommandFlags</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="contract.html" class="tsd-signature-type" data-tsd-kind="Class">Contract</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from BaseContract.createContract</p>
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L329">planner.ts:329</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Creates a <a href="contract.html">Contract</a> object from an ethers.js contract.
+										All calls on the returned object will default to being standard CALL operations.
+									Use this when you want your weiroll script to call a standard external contract.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>contract: <span class="tsd-signature-type">Contract</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The ethers.js Contract object to wrap.</p>
+									</div>
+								</li>
+								<li>
+									<h5>commandflags: <a href="../enums/commandflags.html" class="tsd-signature-type" data-tsd-kind="Enumeration">CommandFlags</a><span class="tsd-signature-symbol"> = ...</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>Optionally specifies a non-default call type to use, such as
+										<a href="../enums/commandflags.html#staticcall">CommandFlags.STATICCALL</a>.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="contract.html" class="tsd-signature-type" data-tsd-kind="Class">Contract</a></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+					<a name="createlibrary" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagStatic">Static</span> create<wbr>Library</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+						<li class="tsd-signature tsd-kind-icon">create<wbr>Library<span class="tsd-signature-symbol">(</span>contract<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">Contract</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="contract.html" class="tsd-signature-type" data-tsd-kind="Class">Contract</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<p>Inherited from BaseContract.createLibrary</p>
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L343">planner.ts:343</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Creates a <a href="contract.html">Contract</a> object from an ethers.js contract.
+										All calls on the returned object will default to being DELEGATECALL operations.
+										Use this when you want your weiroll script to call a library specifically designed
+									for use with weiroll.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>contract: <span class="tsd-signature-type">Contract</span></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The ethers.js Contract object to wrap.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <a href="contract.html" class="tsd-signature-type" data-tsd-kind="Class">Contract</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="../modules.html">Exports</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="../enums/commandflags.html" class="tsd-kind-icon">Command<wbr>Flags</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
+						<a href="contract.html" class="tsd-kind-icon">Contract</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited">
+								<a href="contract.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+								<a href="contract.html#address" class="tsd-kind-icon">address</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+								<a href="contract.html#commandflags" class="tsd-kind-icon">commandflags</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+								<a href="contract.html#functions" class="tsd-kind-icon">functions</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class tsd-is-inherited">
+								<a href="contract.html#interface" class="tsd-kind-icon">interface</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="contract.html#createcontract" class="tsd-kind-icon">create<wbr>Contract</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class tsd-is-inherited tsd-is-static">
+								<a href="contract.html#createlibrary" class="tsd-kind-icon">create<wbr>Library</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-class">
+						<a href="functioncall.html" class="tsd-kind-icon">Function<wbr>Call</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="planner.html" class="tsd-kind-icon">Planner</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/value.html" class="tsd-kind-icon">Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#contractfunction" class="tsd-kind-icon">Contract<wbr>Function</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>

@@ -1,0 +1,195 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>@weiroll/weiroll.js</title>
+	<meta name="description" content="Documentation for @weiroll/weiroll.js">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="assets/css/main.css">
+	<script async src="assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="assets/js/search.json" data-base=".">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="index.html" class="title">@weiroll/weiroll.js</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<h1>@weiroll/weiroll.js</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<div class="tsd-panel tsd-typography">
+				<a href="#weirolljs" id="weirolljs" style="color: inherit; text-decoration: none;">
+					<h1>weiroll.js</h1>
+				</a>
+				<p><a href="https://github.com/weiroll/weiroll.js/actions/workflows/main.yml"><img src="https://github.com/weiroll/weiroll.js/actions/workflows/main.yml/badge.svg" alt="CI"></a><a href="https://github.com/weiroll/weiroll.js/actions/workflows/size.yml"><img src="https://github.com/weiroll/weiroll.js/actions/workflows/size.yml/badge.svg" alt="size"></a></p>
+				<p>weiroll.js is a planner for the operation-chaining/scripting language <a href="https://github.com/weiroll/weiroll">weiroll</a>.</p>
+				<p>It provides an easy-to-use API for generating weiroll programs that can then be passed to any compatible implementation.</p>
+				<a href="#installation" id="installation" style="color: inherit; text-decoration: none;">
+					<h2>Installation</h2>
+				</a>
+				<pre><code><span style="color: #001080">npm</span><span style="color: #000000"> </span><span style="color: #001080">install</span><span style="color: #000000"> --</span><span style="color: #001080">save</span><span style="color: #000000"> @</span><span style="color: #001080">weiroll</span><span style="color: #000000">/</span><span style="color: #001080">weiroll</span><span style="color: #000000">.</span><span style="color: #001080">js</span>
+</code></pre>
+				<a href="#usage" id="usage" style="color: inherit; text-decoration: none;">
+					<h2>Usage</h2>
+				</a>
+				<a href="#wrapping-contracts" id="wrapping-contracts" style="color: inherit; text-decoration: none;">
+					<h3>Wrapping contracts</h3>
+				</a>
+				<p>Weiroll programs consist of a sequence of calls to functions in external contracts. These calls can either be delegate calls to dedicated library contracts, or standard/static calls to external contracts. Before you can start creating a weiroll program, you will need to create interfaces for at least one contract you intend to use.</p>
+				<p>The easiest way to do this is by wrapping ethers.js contract instances:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ethersContract</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #001080">ethers</span><span style="color: #000000">.</span><span style="color: #795E26">Contract</span><span style="color: #000000">(</span><span style="color: #001080">address</span><span style="color: #000000">, </span><span style="color: #001080">abi</span><span style="color: #000000">);</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">contract</span><span style="color: #000000"> = </span><span style="color: #001080">weiroll</span><span style="color: #000000">.</span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #001080">ethersContract</span><span style="color: #000000">);</span>
+</code></pre>
+				<p>This will produce a contract object that generates delegate calls to the contract in <code>ethersContract</code>.</p>
+				<p>To create regular or static calls to an external contract, use <code>createContract</code>:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ethersContract</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #001080">ethers</span><span style="color: #000000">.</span><span style="color: #795E26">Contract</span><span style="color: #000000">(</span><span style="color: #001080">address</span><span style="color: #000000">, </span><span style="color: #001080">abi</span><span style="color: #000000">);</span>
+<span style="color: #008000">// Makes calls using CALL</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">contract</span><span style="color: #000000"> = </span><span style="color: #001080">weiroll</span><span style="color: #000000">.</span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createContract</span><span style="color: #000000">(</span><span style="color: #001080">ethersContract</span><span style="color: #000000">);</span>
+<span style="color: #008000">// Makes calls using STATICCALL</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">contract</span><span style="color: #000000"> = </span><span style="color: #001080">weiroll</span><span style="color: #000000">.</span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createContract</span><span style="color: #000000">(</span><span style="color: #001080">ethersContract</span><span style="color: #000000">, </span><span style="color: #001080">CommandFlags</span><span style="color: #000000">.</span><span style="color: #0070C1">STATICCALL</span><span style="color: #000000">);</span>
+</code></pre>
+				<p>You can repeat this for each contract you wish to use. A weiroll <code>Contract</code> object can be reused across as many planner instances as you wish; there is no need to construct them again for each new program.</p>
+				<a href="#planning-programs" id="planning-programs" style="color: inherit; text-decoration: none;">
+					<h3>Planning programs</h3>
+				</a>
+				<p>First, instantiate a planner:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">planner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #001080">weiroll</span><span style="color: #000000">.</span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+</code></pre>
+				<p>Next, add one or more commands to execute:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ret</span><span style="color: #000000"> = </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">contract</span><span style="color: #000000">.</span><span style="color: #795E26">func</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">));</span>
+</code></pre>
+				<p>Return values from one invocation can be used in another one:</p>
+				<pre><code class="language-javascript"><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">contract</span><span style="color: #000000">.</span><span style="color: #795E26">func2</span><span style="color: #000000">(</span><span style="color: #001080">ret</span><span style="color: #000000">));</span>
+</code></pre>
+				<p>Remember to wrap each call to a contract in <code>planner.add</code>. Attempting to pass the result of one contract function directly to another will not work - each one needs to be added to the planner!</p>
+				<p>For calls to external contracts, you can also pass a value in ether to send:</p>
+				<pre><code class="language-javascript"><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">contract</span><span style="color: #000000">.</span><span style="color: #795E26">func</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">).</span><span style="color: #795E26">withValue</span><span style="color: #000000">(</span><span style="color: #001080">c</span><span style="color: #000000">));</span>
+</code></pre>
+				<p><code>withValue</code> takes the same argument types as contract functions, so you can pass the return value of another function, or a literal value. You cannot combine <code>withValue</code> with delegate calls (eg, calls to a library created with <code>Contract.newLibrary</code>) or static calls.</p>
+				<p>Likewise, if you want to make a particular call static, you can use <code>.staticcall()</code>:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">result</span><span style="color: #000000"> = </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">contract</span><span style="color: #000000">.</span><span style="color: #795E26">func</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">).</span><span style="color: #795E26">staticcall</span><span style="color: #000000">());</span>
+</code></pre>
+				<p>Weiroll only supports functions that return a single value by default. If your function returns multiple values, though, you can instruct weiroll to wrap it in a <code>bytes</code>, which subsequent commands can decode and work with:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">ret</span><span style="color: #000000"> = </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">contract</span><span style="color: #000000">.</span><span style="color: #795E26">func</span><span style="color: #000000">(</span><span style="color: #001080">a</span><span style="color: #000000">, </span><span style="color: #001080">b</span><span style="color: #000000">).</span><span style="color: #795E26">rawValue</span><span style="color: #000000">());</span>
+</code></pre>
+				<p>Once you are done planning operations, generate the program:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> { </span><span style="color: #0070C1">commands</span><span style="color: #000000">, </span><span style="color: #0070C1">state</span><span style="color: #000000"> } = </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">plan</span><span style="color: #000000">();</span>
+</code></pre>
+				<a href="#subplans" id="subplans" style="color: inherit; text-decoration: none;">
+					<h3>Subplans</h3>
+				</a>
+				<p>In some cases it may be useful to be able to instantiate nested instances of the weiroll VM - for example, when using flash loans, or other systems that function by making a callback to your code. The weiroll planner supports this via &#39;subplans&#39;.</p>
+				<p>To make a subplan, construct the operations that should take place inside the nested instance normally, then pass the planner object to a contract function that executes the subplan, and pass that to the outer planner&#39;s <code>.addSubplan()</code> function instead of <code>.add()</code>.</p>
+				<p>For example, suppose you want to call a nested instance to do some math:</p>
+				<pre><code class="language-javascript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">subplanner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sum</span><span style="color: #000000"> = </span><span style="color: #001080">subplanner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #267F99">Math</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #098658">1</span><span style="color: #000000">, </span><span style="color: #098658">2</span><span style="color: #000000">));</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">planner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+<span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">addSubplan</span><span style="color: #000000">(</span><span style="color: #001080">Weiroll</span><span style="color: #000000">.</span><span style="color: #795E26">execute</span><span style="color: #000000">(</span><span style="color: #001080">subplanner</span><span style="color: #000000">, </span><span style="color: #001080">subplanner</span><span style="color: #000000">.</span><span style="color: #001080">state</span><span style="color: #000000">));</span>
+<span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">Events</span><span style="color: #000000">.</span><span style="color: #795E26">logUint</span><span style="color: #000000">(</span><span style="color: #001080">sum</span><span style="color: #000000">));</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> {</span><span style="color: #0070C1">commands</span><span style="color: #000000">, </span><span style="color: #0070C1">state</span><span style="color: #000000">} = </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">plan</span><span style="color: #000000">();</span>
+</code></pre>
+				<p>Subplan functions must specify which argument receives the current state using the special variable <code>Planner.state</code>, and must take exactly one subplanner and one state argument. Subplan functions must either return an updated state or nothing.</p>
+				<p>If a subplan returns updated state, return values created in a subplanner, such as <code>sum</code> above, can be referenced in the outer scope, and even in other subplans, as long as they are referenced after the command that produces them. Subplans that do not return updated state are read-only, and return values defined inside them cannot be referenced outside them.</p>
+			</div>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="modules.html">Exports</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="enums/commandflags.html" class="tsd-kind-icon">Command<wbr>Flags</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/contract.html" class="tsd-kind-icon">Contract</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/functioncall.html" class="tsd-kind-icon">Function<wbr>Call</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="classes/planner.html" class="tsd-kind-icon">Planner</a>
+					</li>
+					<li class=" tsd-kind-interface">
+						<a href="interfaces/value.html" class="tsd-kind-icon">Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="modules.html#contractfunction" class="tsd-kind-icon">Contract<wbr>Function</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="assets/js/main.js"></script>
+</body>
+</html>

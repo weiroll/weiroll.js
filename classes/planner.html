@@ -1,0 +1,402 @@
+<!doctype html>
+<html class="default no-js">
+<head>
+	<meta charset="utf-8">
+	<meta http-equiv="X-UA-Compatible" content="IE=edge">
+	<title>Planner | @weiroll/weiroll.js</title>
+	<meta name="description" content="Documentation for @weiroll/weiroll.js">
+	<meta name="viewport" content="width=device-width, initial-scale=1">
+	<link rel="stylesheet" href="../assets/css/main.css">
+	<script async src="../assets/js/search.js" id="search-script"></script>
+</head>
+<body>
+<header>
+	<div class="tsd-page-toolbar">
+		<div class="container">
+			<div class="table-wrap">
+				<div class="table-cell" id="tsd-search" data-index="../assets/js/search.json" data-base="..">
+					<div class="field">
+						<label for="tsd-search-field" class="tsd-widget search no-caption">Search</label>
+						<input id="tsd-search-field" type="text" />
+					</div>
+					<ul class="results">
+						<li class="state loading">Preparing search index...</li>
+						<li class="state failure">The search index is not available</li>
+					</ul>
+					<a href="../index.html" class="title">@weiroll/weiroll.js</a>
+				</div>
+				<div class="table-cell" id="tsd-widgets">
+					<div id="tsd-filter">
+						<a href="#" class="tsd-widget options no-caption" data-toggle="options">Options</a>
+						<div class="tsd-filter-group">
+							<div class="tsd-select" id="tsd-filter-visibility">
+								<span class="tsd-select-label">All</span>
+								<ul class="tsd-select-list">
+									<li data-value="public">Public</li>
+									<li data-value="protected">Public/Protected</li>
+									<li data-value="private" class="selected">All</li>
+								</ul>
+							</div>
+							<input type="checkbox" id="tsd-filter-inherited" checked />
+							<label class="tsd-widget" for="tsd-filter-inherited">Inherited</label>
+							<input type="checkbox" id="tsd-filter-externals" checked />
+							<label class="tsd-widget" for="tsd-filter-externals">Externals</label>
+						</div>
+					</div>
+					<a href="#" class="tsd-widget menu no-caption" data-toggle="menu">Menu</a>
+				</div>
+			</div>
+		</div>
+	</div>
+	<div class="tsd-page-title">
+		<div class="container">
+			<ul class="tsd-breadcrumb">
+				<li>
+					<a href="../modules.html">@weiroll/weiroll.js</a>
+				</li>
+				<li>
+					<a href="planner.html">Planner</a>
+				</li>
+			</ul>
+			<h1>Class Planner</h1>
+		</div>
+	</div>
+</header>
+<div class="container container-main">
+	<div class="row">
+		<div class="col-8 col-content">
+			<section class="tsd-panel tsd-comment">
+				<div class="tsd-comment tsd-typography">
+					<div class="lead">
+						<p><a href="planner.html">Planner</a> is the main class to use to specify a sequence of operations to execute for a
+						weiroll script.</p>
+					</div>
+					<p>To use a <a href="planner.html">Planner</a>, construct it and call <a href="planner.html#add">Planner.add</a> with the function calls you wish
+					to execute. For example:</p>
+					<pre><code class="language-typescript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">events</span><span style="color: #000000"> = </span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #001080">Events</span><span style="color: #000000">); </span><span style="color: #008000">// Assumes `Events` is an ethers.js contract object</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">planner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+<span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">events</span><span style="color: #000000">.</span><span style="color: #795E26">logUint</span><span style="color: #000000">(</span><span style="color: #098658">123</span><span style="color: #000000">));</span>
+</code></pre>
+				</div>
+			</section>
+			<section class="tsd-panel tsd-hierarchy">
+				<h3>Hierarchy</h3>
+				<ul class="tsd-hierarchy">
+					<li>
+						<span class="target">Planner</span>
+					</li>
+				</ul>
+			</section>
+			<section class="tsd-panel-group tsd-index-group">
+				<h2>Index</h2>
+				<section class="tsd-panel tsd-index-panel">
+					<div class="tsd-index-content">
+						<section class="tsd-index-section ">
+							<h3>Constructors</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-constructor tsd-parent-kind-class"><a href="planner.html#constructor" class="tsd-kind-icon">constructor</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Properties</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-property tsd-parent-kind-class"><a href="planner.html#state" class="tsd-kind-icon">state</a></li>
+							</ul>
+						</section>
+						<section class="tsd-index-section ">
+							<h3>Methods</h3>
+							<ul class="tsd-index-list">
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="planner.html#add" class="tsd-kind-icon">add</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="planner.html#addsubplan" class="tsd-kind-icon">add<wbr>Subplan</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="planner.html#plan" class="tsd-kind-icon">plan</a></li>
+								<li class="tsd-kind-method tsd-parent-kind-class"><a href="planner.html#replacestate" class="tsd-kind-icon">replace<wbr>State</a></li>
+							</ul>
+						</section>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Constructors</h2>
+				<section class="tsd-panel tsd-member tsd-kind-constructor tsd-parent-kind-class">
+					<a name="constructor" class="tsd-anchor"></a>
+					<h3>constructor</h3>
+					<ul class="tsd-signatures tsd-kind-constructor tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">new <wbr>Planner<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><a href="planner.html" class="tsd-signature-type" data-tsd-kind="Class">Planner</a></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L437">planner.ts:437</a></li>
+								</ul>
+							</aside>
+							<h4 class="tsd-returns-title">Returns <a href="planner.html" class="tsd-signature-type" data-tsd-kind="Class">Planner</a></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Properties</h2>
+				<section class="tsd-panel tsd-member tsd-kind-property tsd-parent-kind-class">
+					<a name="state" class="tsd-anchor"></a>
+					<h3><span class="tsd-flag ts-flagReadonly">Readonly</span> state</h3>
+					<div class="tsd-signature tsd-kind-icon">state<span class="tsd-signature-symbol">:</span> <span class="tsd-signature-type">StateValue</span></div>
+					<aside class="tsd-sources">
+						<ul>
+							<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L434">planner.ts:434</a></li>
+						</ul>
+					</aside>
+					<div class="tsd-comment tsd-typography">
+						<div class="lead">
+							<p>Represents the current state of the planner.
+								This value can be passed as an argument to a function that accepts a <code>bytes[]</code>. At runtime it will
+							be replaced with the current state of the weiroll planner.</p>
+						</div>
+					</div>
+				</section>
+			</section>
+			<section class="tsd-panel-group tsd-member-group ">
+				<h2>Methods</h2>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="add" class="tsd-anchor"></a>
+					<h3>add</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">add<span class="tsd-signature-symbol">(</span>call<span class="tsd-signature-symbol">: </span><a href="functioncall.html" class="tsd-signature-type" data-tsd-kind="Class">FunctionCall</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ReturnValue</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L459">planner.ts:459</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Adds a new function call to the planner. Function calls are executed in the order they are added.</p>
+								</div>
+								<p>If the function call has a return value, <code>add</code> returns an object representing that value, which you
+								can pass to subsequent function calls. For example:</p>
+								<pre><code class="language-typescript"><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">math</span><span style="color: #000000"> = </span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #267F99">Math</span><span style="color: #000000">); </span><span style="color: #008000">// Assumes `Math` is an ethers.js contract object</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">events</span><span style="color: #000000"> = </span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #001080">Events</span><span style="color: #000000">); </span><span style="color: #008000">// Assumes `Events` is an ethers.js contract object</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">planner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">sum</span><span style="color: #000000"> = </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">math</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #098658">21</span><span style="color: #000000">, </span><span style="color: #098658">21</span><span style="color: #000000">));</span>
+<span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">events</span><span style="color: #000000">.</span><span style="color: #795E26">logUint</span><span style="color: #000000">(</span><span style="color: #001080">sum</span><span style="color: #000000">));</span>
+</code></pre>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>call: <a href="functioncall.html" class="tsd-signature-type" data-tsd-kind="Class">FunctionCall</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The <a href="functioncall.html">FunctionCall</a> to add to the planner</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">null</span><span class="tsd-signature-symbol"> | </span><span class="tsd-signature-type">ReturnValue</span></h4>
+							<p>An object representing the return value of the call, or null if it does not return a value.</p>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="addsubplan" class="tsd-anchor"></a>
+					<h3>add<wbr>Subplan</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">add<wbr>Subplan<span class="tsd-signature-symbol">(</span>call<span class="tsd-signature-symbol">: </span><a href="functioncall.html" class="tsd-signature-type" data-tsd-kind="Class">FunctionCall</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L510">planner.ts:510</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Adds a call to a subplan. This has the effect of instantiating a nested instance of the weiroll
+										interpreter, and is commonly used for functionality such as flashloans, control flow, or anywhere
+									else you may need to execute logic inside a callback.</p>
+								</div>
+								<p>A <a href="functioncall.html">FunctionCall</a> passed to <a href="planner.html#addsubplan">Planner.addSubplan</a> must take another <a href="planner.html">Planner</a> object as one
+									argument, and a placeholder representing the planner state, accessible as <a href="planner.html#state">Planner.state</a>, as
+								another. Exactly one of each argument must be provided.</p>
+								<p>At runtime, the subplan is replaced by a list of commands for the subplanner (type <code>bytes32[]</code>),
+								and <code>planner.state</code> is replaced by the current state of the parent planner instance (type <code>bytes[]</code>).</p>
+								<p>If the <code>call</code> returns a <code>bytes[]</code>, this will be used to replace the parent planner&#39;s state after
+									the call to the subplanner completes. Return values defined inside a subplan may be used outside that
+									subplan - both in the parent planner and in subsequent subplans - only if the <code>call</code> returns the
+								updated planner state.</p>
+								<p>Example usage:</p>
+								<pre><code><span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">exchange</span><span style="color: #000000"> = </span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #001080">Exchange</span><span style="color: #000000">); </span><span style="color: #008000">// Assumes `Exchange` is an ethers.js contract</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">events</span><span style="color: #000000"> = </span><span style="color: #001080">Contract</span><span style="color: #000000">.</span><span style="color: #795E26">createLibrary</span><span style="color: #000000">(</span><span style="color: #001080">Events</span><span style="color: #000000">); </span><span style="color: #008000">// Assumes `Events` is an ethers.js contract</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">subplanner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">outqty</span><span style="color: #000000"> = </span><span style="color: #001080">subplanner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">exchange</span><span style="color: #000000">.</span><span style="color: #795E26">swap</span><span style="color: #000000">(</span><span style="color: #001080">tokenb</span><span style="color: #000000">, </span><span style="color: #001080">tokena</span><span style="color: #000000">, </span><span style="color: #001080">qty</span><span style="color: #000000">));</span>
+
+<span style="color: #0000FF">const</span><span style="color: #000000"> </span><span style="color: #0070C1">planner</span><span style="color: #000000"> = </span><span style="color: #0000FF">new</span><span style="color: #000000"> </span><span style="color: #795E26">Planner</span><span style="color: #000000">();</span>
+<span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">addSubplan</span><span style="color: #000000">(</span><span style="color: #001080">exchange</span><span style="color: #000000">.</span><span style="color: #795E26">flashswap</span><span style="color: #000000">(</span><span style="color: #001080">tokena</span><span style="color: #000000">, </span><span style="color: #001080">tokenb</span><span style="color: #000000">, </span><span style="color: #001080">qty</span><span style="color: #000000">, </span><span style="color: #001080">subplanner</span><span style="color: #000000">, </span><span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #001080">state</span><span style="color: #000000">));</span>
+<span style="color: #001080">planner</span><span style="color: #000000">.</span><span style="color: #795E26">add</span><span style="color: #000000">(</span><span style="color: #001080">events</span><span style="color: #000000">.</span><span style="color: #795E26">logUint</span><span style="color: #000000">(</span><span style="color: #001080">outqty</span><span style="color: #000000">)); </span><span style="color: #008000">// Only works if `exchange.flashswap` returns updated state</span>
+</code></pre>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>call: <a href="functioncall.html" class="tsd-signature-type" data-tsd-kind="Class">FunctionCall</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The <a href="functioncall.html">FunctionCall</a> to add to the planner.</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="plan" class="tsd-anchor"></a>
+					<h3>plan</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">plan<span class="tsd-signature-symbol">(</span><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-symbol">{ </span>commands<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L794">planner.ts:794</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Builds an execution plan for all the commands added to the planner.</p>
+								</div>
+							</div>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-symbol">{ </span>commands<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol">; </span>state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span><span class="tsd-signature-symbol"> }</span></h4>
+							<p><code>commands</code> and <code>state</code>, which can be passed directly to the weiroll executor
+							to execute the plan.</p>
+							<ul class="tsd-parameters">
+								<li class="tsd-parameter">
+									<h5>commands<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+								<li class="tsd-parameter">
+									<h5>state<span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">string</span><span class="tsd-signature-symbol">[]</span></h5>
+								</li>
+							</ul>
+						</li>
+					</ul>
+				</section>
+				<section class="tsd-panel tsd-member tsd-kind-method tsd-parent-kind-class">
+					<a name="replacestate" class="tsd-anchor"></a>
+					<h3>replace<wbr>State</h3>
+					<ul class="tsd-signatures tsd-kind-method tsd-parent-kind-class">
+						<li class="tsd-signature tsd-kind-icon">replace<wbr>State<span class="tsd-signature-symbol">(</span>call<span class="tsd-signature-symbol">: </span><a href="functioncall.html" class="tsd-signature-type" data-tsd-kind="Class">FunctionCall</a><span class="tsd-signature-symbol">)</span><span class="tsd-signature-symbol">: </span><span class="tsd-signature-type">void</span></li>
+					</ul>
+					<ul class="tsd-descriptions">
+						<li class="tsd-description">
+							<aside class="tsd-sources">
+								<ul>
+									<li>Defined in <a href="https://github.com/weiroll/weiroll.js/blob/80785c5/src/planner.ts#L553">planner.ts:553</a></li>
+								</ul>
+							</aside>
+							<div class="tsd-comment tsd-typography">
+								<div class="lead">
+									<p>Executes a <a href="functioncall.html">FunctionCall</a>, and replaces the planner state with the value it
+										returns. This can be used to execute functions that make arbitrary changes to
+										the planner state. Note that the planner library is not aware of these changes -
+									so it may produce invalid plans if you don&#39;t know what you&#39;re doing.</p>
+								</div>
+							</div>
+							<h4 class="tsd-parameters-title">Parameters</h4>
+							<ul class="tsd-parameters">
+								<li>
+									<h5>call: <a href="functioncall.html" class="tsd-signature-type" data-tsd-kind="Class">FunctionCall</a></h5>
+									<div class="tsd-comment tsd-typography">
+										<p>The <a href="functioncall.html">FunctionCall</a> to execute</p>
+									</div>
+								</li>
+							</ul>
+							<h4 class="tsd-returns-title">Returns <span class="tsd-signature-type">void</span></h4>
+						</li>
+					</ul>
+				</section>
+			</section>
+		</div>
+		<div class="col-4 col-menu menu-sticky-wrap menu-highlight">
+			<nav class="tsd-navigation primary">
+				<ul>
+					<li class=" ">
+						<a href="../modules.html">Exports</a>
+					</li>
+				</ul>
+			</nav>
+			<nav class="tsd-navigation secondary menu-sticky">
+				<ul class="before-current">
+					<li class=" tsd-kind-enum">
+						<a href="../enums/commandflags.html" class="tsd-kind-icon">Command<wbr>Flags</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="contract.html" class="tsd-kind-icon">Contract</a>
+					</li>
+					<li class=" tsd-kind-class">
+						<a href="functioncall.html" class="tsd-kind-icon">Function<wbr>Call</a>
+					</li>
+				</ul>
+				<ul class="current">
+					<li class="current tsd-kind-class">
+						<a href="planner.html" class="tsd-kind-icon">Planner</a>
+						<ul>
+							<li class=" tsd-kind-constructor tsd-parent-kind-class">
+								<a href="planner.html#constructor" class="tsd-kind-icon">constructor</a>
+							</li>
+							<li class=" tsd-kind-property tsd-parent-kind-class">
+								<a href="planner.html#state" class="tsd-kind-icon">state</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="planner.html#add" class="tsd-kind-icon">add</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="planner.html#addsubplan" class="tsd-kind-icon">add<wbr>Subplan</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="planner.html#plan" class="tsd-kind-icon">plan</a>
+							</li>
+							<li class=" tsd-kind-method tsd-parent-kind-class">
+								<a href="planner.html#replacestate" class="tsd-kind-icon">replace<wbr>State</a>
+							</li>
+						</ul>
+					</li>
+				</ul>
+				<ul class="after-current">
+					<li class=" tsd-kind-interface">
+						<a href="../interfaces/value.html" class="tsd-kind-icon">Value</a>
+					</li>
+					<li class=" tsd-kind-type-alias">
+						<a href="../modules.html#contractfunction" class="tsd-kind-icon">Contract<wbr>Function</a>
+					</li>
+				</ul>
+			</nav>
+		</div>
+	</div>
+</div>
+<footer class="with-border-bottom">
+	<div class="container">
+		<h2>Legend</h2>
+		<div class="tsd-legend-group">
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class"><span class="tsd-kind-icon">Constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class"><span class="tsd-kind-icon">Property</span></li>
+				<li class="tsd-kind-method tsd-parent-kind-class"><span class="tsd-kind-icon">Method</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-constructor tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited constructor</span></li>
+				<li class="tsd-kind-property tsd-parent-kind-class tsd-is-inherited"><span class="tsd-kind-icon">Inherited property</span></li>
+			</ul>
+			<ul class="tsd-legend">
+				<li class="tsd-kind-property tsd-parent-kind-interface"><span class="tsd-kind-icon">Property</span></li>
+			</ul>
+		</div>
+	</div>
+</footer>
+<div class="container tsd-generator">
+	<p>Generated using <a href="https://typedoc.org/" target="_blank">TypeDoc</a></p>
+</div>
+<div class="overlay"></div>
+<script src="../assets/js/main.js"></script>
+</body>
+</html>
