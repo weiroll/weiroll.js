@@ -5,6 +5,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { CommandFlags, Contract, Planner } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
+import * as curvePoolABI from '../abis/CurvePool.json';
 
 const SAMPLE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
@@ -39,6 +40,7 @@ describe('Contract', () => {
 describe('Planner', () => {
   let Math: Contract;
   let Strings: Contract;
+  let CurvePool: Contract;
 
   before(() => {
     Math = Contract.createLibrary(
@@ -47,6 +49,9 @@ describe('Planner', () => {
     Strings = Contract.createLibrary(
       new ethers.Contract(SAMPLE_ADDRESS, stringsABI.abi)
     );
+    CurvePool = Contract.createContract(
+      new ethers.Contract(SAMPLE_ADDRESS, curvePoolABI.abi)
+    )
   });
 
   it('adds function calls to a list of commands', () => {
@@ -177,6 +182,27 @@ describe('Planner', () => {
       hexDataSlice(defaultAbiCoder.encode(['string'], ['world!']), 32)
     );
   });
+
+  it('plans add_liquidity on Curve', () => {
+    const planner = new Planner();
+
+    planner.add(CurvePool.functions["add_liquidity(uint256[3],uint256)"]([1, 2, 3], 4));
+    const { commands, state } = planner.plan();
+
+    expect(commands.length).to.equal(1);
+    expect(commands[0]).to.equal(
+      '0x4515cef3018001ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+    );
+
+    // if you look at the first item in state (the array of [1,2,3]), it lost the first item
+    console.log("state:", state)
+
+    expect(state.length).to.equal(2);
+    // not sure what these should actually be
+    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint[3]'], [[1, 2, 3]]));
+    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [4]));
+  });
+
 
   it('requires argument counts to match the function definition', () => {
     const planner = new Planner();
