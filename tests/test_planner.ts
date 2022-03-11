@@ -5,6 +5,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { CommandFlags, Contract, Planner } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
+import * as fixedABI from '../abis/Fixed.json';
 
 const SAMPLE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
@@ -39,6 +40,7 @@ describe('Contract', () => {
 describe('Planner', () => {
   let Math: Contract;
   let Strings: Contract;
+  let Fixed: Contract;
 
   before(() => {
     Math = Contract.createLibrary(
@@ -46,6 +48,9 @@ describe('Planner', () => {
     );
     Strings = Contract.createLibrary(
       new ethers.Contract(SAMPLE_ADDRESS, stringsABI.abi)
+    );
+    Fixed = Contract.createLibrary(
+      new ethers.Contract(SAMPLE_ADDRESS, fixedABI.abi)
     );
   });
 
@@ -66,6 +71,36 @@ describe('Planner', () => {
     expect(commands.length).to.equal(1);
     expect(commands[0]).to.equal(
       '0x771602f7000001ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+    );
+
+    expect(state.length).to.equal(2);
+    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint'], [1]));
+    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [2]));
+  });
+
+  it('plans a simple program using fixed-size tuple', () => {
+    const planner = new Planner();
+    planner.add(Fixed.addStruct({a: 1, b: 2}));
+    const { commands, state } = planner.plan();
+
+    expect(commands.length).to.equal(1);
+    expect(commands[0]).to.equal(
+      '0x50527d6e000001ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+    );
+
+    expect(state.length).to.equal(2);
+    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint'], [1]));
+    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [2]));
+  });
+
+  it('plans a simple program using fixed-size array', () => {
+    const planner = new Planner();
+    planner.add(Fixed.addArray([1, 2]));
+    const { commands, state } = planner.plan();
+
+    expect(commands.length).to.equal(1);
+    expect(commands[0]).to.equal(
+      '0xe9536618000001ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
     expect(state.length).to.equal(2);

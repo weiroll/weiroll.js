@@ -173,7 +173,29 @@ export type ContractFunction = (...args: Array<any>) => FunctionCall;
 function isDynamicType(param?: ParamType): boolean {
   if (typeof param === 'undefined') return false;
 
-  return ['string', 'bytes', 'array', 'tuple'].includes(param.baseType);
+  switch (param.baseType) {
+    case 'array':
+      // Check if array is fixed or dynamic
+      return param.arrayLength === -1;
+    case 'bytes':
+      return true;
+    case 'string':
+      return true;
+    case 'tuple':
+      // Check if tuple contains dynamic types
+      for (let i = 0; i < param.components.length; i++) {
+        if (isDynamicType(param.components[i])) return true;
+      }
+      return false;
+    default:
+      return false;
+  }
+}
+
+function isFixedType(param?: ParamType): boolean {
+  if (typeof param === 'undefined') return false;
+
+  return ['tuple', 'array'].includes(param.baseType) && !isDynamicType(param)
 }
 
 function abiEncodeSingle(param: ParamType, value: any): LiteralValue {
@@ -601,7 +623,17 @@ export class Planner {
           }
           commandVisibility.set(arg.command, command);
         } else if (arg instanceof LiteralValue) {
-          literalVisibility.set(arg.value, command);
+          if (isFixedType(arg.param)) {
+            const objLength = arg.param.baseType === 'tuple' ? arg.param.components.length : arg.param.arrayLength
+            for (let i = 0; i < objLength; i++) {
+              literalVisibility.set(
+                hexDataSlice(arg.value, 32*i, 32*(i + 1)),
+                command
+              );
+            }
+          } else {
+            literalVisibility.set(arg.value, command);
+          }
         } else if (arg instanceof SubplanValue) {
           let subplanSeen = seen;
           if (
@@ -647,25 +679,33 @@ export class Planner {
 
     const args = new Array<number>();
     inargs.forEach((arg) => {
-      let slot: number;
-      if (arg instanceof ReturnValue) {
-        slot = returnSlotMap.get(arg.command) as number;
-      } else if (arg instanceof LiteralValue) {
-        slot = literalSlotMap.get(arg.value) as number;
-      } else if (arg instanceof StateValue) {
-        slot = 0xfe;
-      } else if (arg instanceof SubplanValue) {
-        // buildCommands has already built the subplan and put it in the last state slot
-        slot = state.length - 1;
+      if (arg instanceof LiteralValue && isFixedType(arg.param)) {
+        const objLength = arg.param.baseType === 'tuple' ? arg.param.components.length : arg.param.arrayLength
+        for (let i = 0; i < objLength; i++) {
+          const value = hexDataSlice(arg.value, 32*i, 32*(i + 1));
+          const slot = literalSlotMap.get(value) as number;
+          args.push(slot);
+        }
       } else {
-        throw new Error(`Unknown function argument type '${typeof arg}'`);
+        let slot: number;
+        if (arg instanceof ReturnValue) {
+          slot = returnSlotMap.get(arg.command) as number;
+        } else if (arg instanceof LiteralValue) {
+          slot = literalSlotMap.get(arg.value) as number;
+        } else if (arg instanceof StateValue) {
+          slot = 0xfe;
+        } else if (arg instanceof SubplanValue) {
+          // buildCommands has already built the subplan and put it in the last state slot
+          slot = state.length - 1;
+        } else {
+          throw new Error(`Unknown function argument type '${typeof arg}'`);
+        }
+        if (isDynamicType(arg.param)) {
+          slot |= 0x80;
+        }
+        args.push(slot);
       }
-      if (isDynamicType(arg.param)) {
-        slot |= 0x80;
-      }
-      args.push(slot);
     });
-
     return args;
   }
 
