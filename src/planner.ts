@@ -743,7 +743,7 @@ export class Planner {
           isDynamicType(command.call.fragment.outputs?.[0]) ||
           (command.call.flags & CommandFlags.TUPLE_RETURN) !== 0
         ) {
-          ret |= 0x80;
+          ret |= 0x00;
         }
       } else if (
         command.type === CommandType.RAWCALL ||
