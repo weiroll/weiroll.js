@@ -739,11 +739,8 @@ export class Planner {
           ps.state.push('0x');
         }
 
-        if (
-          isDynamicType(command.call.fragment.outputs?.[0]) ||
-          (command.call.flags & CommandFlags.TUPLE_RETURN) !== 0
-        ) {
-          ret |= 0x00;
+        if (isDynamicType(command.call.fragment.outputs?.[0])) {
+          ret |= 0x80;
         }
       } else if (
         command.type === CommandType.RAWCALL ||
