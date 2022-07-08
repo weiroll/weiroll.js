@@ -5,6 +5,7 @@ import { defaultAbiCoder } from '@ethersproject/abi';
 import { CommandFlags, Contract, Planner } from '../src/planner';
 import * as mathABI from '../abis/Math.json';
 import * as stringsABI from '../abis/Strings.json';
+import * as curvePoolABI from '../abis/CurvePool.json';
 
 const SAMPLE_ADDRESS = '0xeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee';
 
@@ -39,6 +40,7 @@ describe('Contract', () => {
 describe('Planner', () => {
   let Math: Contract;
   let Strings: Contract;
+  let CurvePool: Contract;
 
   before(() => {
     Math = Contract.createLibrary(
@@ -46,6 +48,9 @@ describe('Planner', () => {
     );
     Strings = Contract.createLibrary(
       new ethers.Contract(SAMPLE_ADDRESS, stringsABI.abi)
+    );
+    CurvePool = Contract.createContract(
+      new ethers.Contract(SAMPLE_ADDRESS, curvePoolABI.abi)
     );
   });
 
@@ -176,6 +181,37 @@ describe('Planner', () => {
     expect(state[1]).to.equal(
       hexDataSlice(defaultAbiCoder.encode(['string'], ['world!']), 32)
     );
+  });
+
+  it('plans add_liquidity on Curve', () => {
+    const planner = new Planner();
+
+    planner.add(
+      CurvePool.functions['add_liquidity(uint256[3],uint256)']([1, 2, 3], 4)
+    );
+    const { commands, state } = planner.plan();
+
+    expect(commands.length).to.equal(1);
+    expect(commands[0]).to.equal(
+      '0x4515cef3018001ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+    );
+
+    // TODO: if you look at the first item in state (the array of [1,2,3]), it lost the first item
+    // TODO: what is the correct way to print inside of a test?
+    console.log('state:', state);
+
+    // TODO: not sure what state should actually be. theres two choices
+    // option 1 requires changing some solidity. this is the more gas efficient choice
+    expect(state.length).to.equal(2);
+    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint[3]'], [[1, 2, 3]]));
+    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [4]));
+
+    // option 2 requires changing the planner to treat fixed sized arrays as multiple elements
+    expect(state.length).to.equal(4);
+    expect(state[0]).to.equal(defaultAbiCoder.encode(['uint'], [1]));
+    expect(state[1]).to.equal(defaultAbiCoder.encode(['uint'], [2]));
+    expect(state[2]).to.equal(defaultAbiCoder.encode(['uint'], [3]));
+    expect(state[3]).to.equal(defaultAbiCoder.encode(['uint'], [4]));
   });
 
   it('requires argument counts to match the function definition', () => {
