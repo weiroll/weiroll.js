@@ -30,6 +30,26 @@ class LiteralValue implements Value {
   }
 }
 
+class ArrayValue implements Value {
+  readonly param: ParamType;
+  readonly values: Value[];
+
+  constructor(param: ParamType, values: Value[]) {
+    this.param = param;
+    this.values = values;
+  }
+}
+
+class TupleValue implements Value {
+  readonly param: ParamType;
+  readonly values: Value[];
+
+  constructor(param: ParamType, values: any) {
+    this.param = param;
+    this.values = values;
+  }
+}
+
 class ReturnValue implements Value {
   readonly param: ParamType;
   readonly command: Command; // Function call we want the return value of
@@ -75,9 +95,9 @@ export enum CommandFlags {
   /** A bitmask that selects calltype flags */
   CALLTYPE_MASK = 0x03,
   /** Specifies that this is an extended command, with an additional command word for indices. Internal use only. */
-  EXTENDED_COMMAND = 0x40,
+  EXTENDED_COMMAND = 0x80,
   /** Specifies that the return value of this call should be wrapped in a `bytes`. Internal use only. */
-  TUPLE_RETURN = 0x80,
+  TUPLE_RETURN = 0x40,
 }
 
 /**
@@ -172,7 +192,7 @@ export type ContractFunction = (...args: Array<any>) => FunctionCall;
 
 function isDynamicType(param?: ParamType): boolean {
   if (typeof param === 'undefined') return false;
-
+  console.log('isDynamicType: ', param);
   switch (param.baseType) {
     case 'array':
       // Check if array is fixed or dynamic
@@ -191,15 +211,16 @@ function isDynamicType(param?: ParamType): boolean {
       return false;
   }
 }
-
+/*
 function isFixedType(param?: ParamType): boolean {
   if (typeof param === 'undefined') return false;
 
-  return ['tuple', 'array'].includes(param.baseType) && !isDynamicType(param)
+  return ['tuple', 'array'].includes(param.baseType) && !isDynamicType(param);
 }
-
+*/
 function abiEncodeSingle(param: ParamType, value: any): LiteralValue {
   if (isDynamicType(param)) {
+    console.log('abiEncodeSingle: is dynamic type');
     return new LiteralValue(
       param,
       hexDataSlice(defaultAbiCoder.encode([param], [value]), 32)
@@ -210,6 +231,7 @@ function abiEncodeSingle(param: ParamType, value: any): LiteralValue {
 
 function encodeArg(arg: any, param: ParamType): Value {
   if (isValue(arg)) {
+    console.log('encodeArg: is value');
     if (arg.param.type !== param.type) {
       // Todo: type casting rules
       throw new Error(
@@ -218,7 +240,26 @@ function encodeArg(arg: any, param: ParamType): Value {
     }
     return arg;
   } else if (arg instanceof Planner) {
+    console.log('encodeArg: subplan');
     return new SubplanValue(arg);
+  } else if (param.baseType === 'array') {
+    console.log('encodeArg: array');
+    const values: Value[] = [];
+    for (let i = 0; i < arg.length; i++) {
+      console.log('encodeArg: encoding array child');
+      values.push(encodeArg(arg[i], param.arrayChildren));
+    }
+    return new ArrayValue(param, values);
+  } else if (param.baseType === 'tuple') {
+    console.log('encodeArg: tuple');
+    const values: Value[] = [];
+    for (let i = 0; i < param.components.length; i++) {
+      console.log('encodeArg: encoding tuple child');
+      values.push(
+        encodeArg(arg[param.components[i].name], param.components[i])
+      );
+    }
+    return new TupleValue(param, values);
   } else {
     return abiEncodeSingle(param, arg);
   }
@@ -583,6 +624,65 @@ export class Planner {
     this.commands.push(new Command(call, CommandType.RAWCALL));
   }
 
+  private setVisibility(
+    arg: Value,
+    command: Command,
+    commandVisibility: Map<Command, Command>,
+    literalVisibility: Map<string, Command>,
+    seen: Set<Command>,
+    planners: Set<Planner>
+  ) {
+    if (arg instanceof ReturnValue) {
+      console.log('setVisibility: return');
+      if (!seen.has(arg.command)) {
+        throw new Error(
+          `Return value from "${arg.command.call.fragment.name}" is not visible here`
+        );
+      }
+      commandVisibility.set(arg.command, command);
+    } else if (arg instanceof LiteralValue) {
+      console.log('setVisibility: literal');
+      literalVisibility.set(arg.value, command);
+    } else if (arg instanceof ArrayValue || arg instanceof TupleValue) {
+      console.log('setVisibility: tuple or array');
+      if (arg instanceof ArrayValue && isDynamicType(arg.param)) {
+        literalVisibility.set(
+          defaultAbiCoder.encode(['uint256'], [arg.values.length]),
+          command
+        );
+      }
+      for (let i = 0; i < arg.values.length; i++) {
+        console.log('setVisibility: encoding child visibility');
+        this.setVisibility(
+          arg.values[i],
+          command,
+          commandVisibility,
+          literalVisibility,
+          seen,
+          planners
+        );
+      }
+    } else if (arg instanceof SubplanValue) {
+      console.log('setVisibility: subplan');
+      let subplanSeen = seen;
+      if (
+        !command.call.fragment.outputs ||
+        command.call.fragment.outputs.length === 0
+      ) {
+        // Read-only subplan; return values aren't visible externally
+        subplanSeen = new Set<Command>(seen);
+      }
+      arg.planner.preplan(
+        commandVisibility,
+        literalVisibility,
+        subplanSeen,
+        planners
+      );
+    } else if (!(arg instanceof StateValue)) {
+      throw new Error(`Unknown function argument type '${typeof arg}'`);
+    }
+  }
+
   private preplan(
     commandVisibility: Map<Command, Command>,
     literalVisibility: Map<string, Command>,
@@ -614,49 +714,118 @@ export class Planner {
         inargs = [command.call.callvalue].concat(inargs);
       }
 
+      // Set pointers total in state
+      const pointers = this.getPointers(inargs);
+      literalVisibility.set(
+        defaultAbiCoder.encode(['uint256'], [pointers]),
+        command
+      );
+
       for (let arg of inargs) {
-        if (arg instanceof ReturnValue) {
-          if (!seen.has(arg.command)) {
-            throw new Error(
-              `Return value from "${arg.command.call.fragment.name}" is not visible here`
-            );
-          }
-          commandVisibility.set(arg.command, command);
-        } else if (arg instanceof LiteralValue) {
-          if (isFixedType(arg.param)) {
-            const objLength = arg.param.baseType === 'tuple' ? arg.param.components.length : arg.param.arrayLength
-            for (let i = 0; i < objLength; i++) {
-              literalVisibility.set(
-                hexDataSlice(arg.value, 32*i, 32*(i + 1)),
-                command
-              );
-            }
-          } else {
-            literalVisibility.set(arg.value, command);
-          }
-        } else if (arg instanceof SubplanValue) {
-          let subplanSeen = seen;
-          if (
-            !command.call.fragment.outputs ||
-            command.call.fragment.outputs.length === 0
-          ) {
-            // Read-only subplan; return values aren't visible externally
-            subplanSeen = new Set<Command>(seen);
-          }
-          arg.planner.preplan(
-            commandVisibility,
-            literalVisibility,
-            subplanSeen,
-            planners
-          );
-        } else if (!(arg instanceof StateValue)) {
-          throw new Error(`Unknown function argument type '${typeof arg}'`);
-        }
+        this.setVisibility(
+          arg,
+          command,
+          commandVisibility,
+          literalVisibility,
+          seen,
+          planners
+        );
       }
       seen.add(command);
     }
 
     return { commandVisibility, literalVisibility };
+  }
+  /*
+  private getPointerSlots(
+    arg: Value
+  ): Array<number> {
+    const slots = new Array<number>();
+    if (arg instanceof ArrayValue || arg instanceof TupleValue) {
+      console.log("getSlots: array or tuple")
+      // Tuples can be composed of other tuples or arrays
+      if (isDynamicType(arg.param)) {
+        console.log("getSlots: tuple/array is dynamic type")
+        // add pointer
+        slots.push(0xfd);
+      }
+    }
+    return slots;
+  }
+  */
+  private getPointers(args: Value[]): number {
+    let count = 0;
+    for (let arg of args) {
+      if (arg instanceof ArrayValue || arg instanceof TupleValue) {
+        console.log('getPointers: array or tuple');
+        // Tuples can be composed of other tuples or arrays
+        if (isDynamicType(arg.param)) {
+          count++;
+        }
+      }
+    }
+    return count;
+  }
+
+  private getSlots(
+    arg: Value,
+    returnSlotMap: Map<Command, number>,
+    literalSlotMap: Map<string, number>,
+    state: Array<string>
+  ): Array<number> {
+    const slots = new Array<number>();
+    if (arg instanceof ArrayValue || arg instanceof TupleValue) {
+      console.log('getSlots: array or tuple');
+      // Dynamic arrays have a length value
+      if (arg instanceof ArrayValue && isDynamicType(arg.param)) {
+        const slot: number = literalSlotMap.get(
+          defaultAbiCoder.encode(['uint256'], [arg.values.length])
+        ) as number;
+        slots.push(slot);
+      }
+      // Tuples/arrays can be composed of other tuples or arrays
+      for (let i = 0; i < arg.values.length; i++) {
+        console.log('getSlots: encoding child slots');
+        const subSlots = this.getSlots(
+          arg.values[i],
+          returnSlotMap,
+          literalSlotMap,
+          state
+        );
+        slots.push(...subSlots);
+      }
+      if (isDynamicType(arg.param)) {
+        console.log('getSlots: tuple/array is dynamic type');
+        // add pointer flag after slots
+        slots.push(0xfd);
+      }
+    } else {
+      let slot: number;
+      if (arg instanceof ReturnValue) {
+        console.log('getSlots: return');
+        slot = returnSlotMap.get(arg.command) as number;
+      } else if (arg instanceof LiteralValue) {
+        console.log('getSlots: literal');
+        slot = literalSlotMap.get(arg.value) as number;
+      } else if (arg instanceof StateValue) {
+        console.log('getSlots: state');
+        slot = 0xfe;
+      } else if (arg instanceof SubplanValue) {
+        console.log('getSlots: subplan');
+        // buildCommands has already built the subplan and put it in the last state slot
+        slot = state.length - 1;
+      } else {
+        throw new Error(`Unknown function argument type '${typeof arg}'`);
+      }
+      if (isDynamicType(arg.param)) {
+        console.log('getSlots: is dynamic type');
+        console.log('getSlots - before: ', slot);
+        slot |= 0x80;
+        console.log('getSlots - after: ', slot);
+      }
+      slots.push(slot);
+    }
+    return slots;
   }
 
   private buildCommandArgs(
@@ -678,33 +847,21 @@ export class Planner {
     }
 
     const args = new Array<number>();
+    // Set pointers total in state
+    const pointers = this.getPointers(inargs);
+    const slot: number = literalSlotMap.get(
+      defaultAbiCoder.encode(['uint256'], [pointers])
+    ) as number;
+    args.push(slot);
+    /*
     inargs.forEach((arg) => {
-      if (arg instanceof LiteralValue && isFixedType(arg.param)) {
-        const objLength = arg.param.baseType === 'tuple' ? arg.param.components.length : arg.param.arrayLength
-        for (let i = 0; i < objLength; i++) {
-          const value = hexDataSlice(arg.value, 32*i, 32*(i + 1));
-          const slot = literalSlotMap.get(value) as number;
-          args.push(slot);
-        }
-      } else {
-        let slot: number;
-        if (arg instanceof ReturnValue) {
-          slot = returnSlotMap.get(arg.command) as number;
-        } else if (arg instanceof LiteralValue) {
-          slot = literalSlotMap.get(arg.value) as number;
-        } else if (arg instanceof StateValue) {
-          slot = 0xfe;
-        } else if (arg instanceof SubplanValue) {
-          // buildCommands has already built the subplan and put it in the last state slot
-          slot = state.length - 1;
-        } else {
-          throw new Error(`Unknown function argument type '${typeof arg}'`);
-        }
-        if (isDynamicType(arg.param)) {
-          slot |= 0x80;
-        }
-        args.push(slot);
-      }
+      const slots = this.getPointerSlots(arg)
+      args.push(...slots)
+    });
+    */
+    inargs.forEach((arg) => {
+      const slots = this.getSlots(arg, returnSlotMap, literalSlotMap, state);
+      args.push(...slots);
     });
     return args;
   }
@@ -738,7 +895,7 @@ export class Planner {
         ps.literalSlotMap,
         ps.state
       );
-
+      console.log('buildCommands - args: ', args);
       if (args.length > 6) {
         flags |= CommandFlags.EXTENDED_COMMAND;
       }
@@ -801,6 +958,7 @@ export class Planner {
         (flags & CommandFlags.EXTENDED_COMMAND) ===
         CommandFlags.EXTENDED_COMMAND
       ) {
+        console.log('buildCommands: extended command');
         // Extended command
         encodedCommands.push(
           hexConcat([
@@ -811,6 +969,7 @@ export class Planner {
         );
         encodedCommands.push(hexConcat([padArray(args, 32, 0xff)]));
       } else {
+        console.log('buildCommands: standard command');
         // Standard command
         encodedCommands.push(
           hexConcat([
@@ -858,6 +1017,9 @@ export class Planner {
       );
     });
 
+    console.log('plan - literalVisiblity: ', literalVisibility);
+    console.log('plan - state: ', state);
+    console.log('plan - literalSlotMap: ', literalSlotMap);
     const ps: PlannerState = {
       returnSlotMap: new Map<Command, number>(),
       literalSlotMap,

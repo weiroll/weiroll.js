@@ -80,7 +80,7 @@ describe('Planner', () => {
 
   it('plans a simple program using fixed-size tuple', () => {
     const planner = new Planner();
-    planner.add(Fixed.addStruct({a: 1, b: 2}));
+    planner.add(Fixed.addStruct({ a: 1, b: 2 }));
     const { commands, state } = planner.plan();
 
     expect(commands.length).to.equal(1);
@@ -119,7 +119,7 @@ describe('Planner', () => {
   it('plans a program that uses return values', () => {
     const planner = new Planner();
     const sum1 = planner.add(Math.add(1, 2));
-    planner.add(Math.add(sum1, 3));
+    planner.add(Fixed.addArray([sum1, 3]));
     const { commands, state } = planner.plan();
 
     expect(commands.length).to.equal(2);
@@ -127,7 +127,7 @@ describe('Planner', () => {
       '0x771602f7000001ffffffff01eeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
     expect(commands[1]).to.equal(
-      '0x771602f7000102ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
+      '0xe9536618000102ffffffffffeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeeee'
     );
 
     expect(state.length).to.equal(3);
